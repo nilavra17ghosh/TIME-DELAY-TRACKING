@@ -1,0 +1,56 @@
+pilot first 10 chips: [ 1. -1. -1.  1. -1. -1. -1. -1.  1. -1.]
+
+=== Part 1: beta^2 (1/chip^2) ===
+project (from summary.csv crlb)      : 2.44836
+continuous FFT, span6 sym (64 sps)   : 2.44798
+continuous FFT, span6 asym [-6,7)    : 2.44811
+continuous FFT, span12 sym           : 2.44864
+continuous ideal RC (no truncation)  : 2.44875
+continuous time-domain s' (256 sps)  : 2.44814
+discrete sps4 sym, phase 0           : 2.44829
+discrete sps4 asym, phase 0          : 2.44836
+discrete sps16 sym                   : 2.44815
+discrete sps4 asym over sampling phase: min 2.44788 max 2.44876
+  rel diff project vs FFT span6: +0.016 %  (CRLB rel diff -0.016 %)
+  rel diff project vs ideal RC: -0.016 %  (CRLB rel diff +0.016 %)
+  rel diff project vs disc sps4: +0.000 %  (CRLB rel diff -0.000 %)
+max |CRLB_proj/CRLB_mine(FFT) - 1| over grid: 0.00015769980926882976
+
+=== Part 2: ZZB (continuous rho, n_h=4001, span6 sym) vs project ===
+ snr   proj_zzb    my_zzb     rel%    my_noVF   VF-gain%  my/CRLB
+  -10 1.01989e+00 1.01988e+00  -0.001 1.01988e+00    0.00   0.499
+   -8 9.42341e-01 9.42328e-01  -0.001 9.42328e-01    0.00   0.731
+   -6 8.48153e-01 8.48137e-01  -0.002 8.48137e-01    0.00   1.043
+   -4 7.36109e-01 7.36091e-01  -0.003 7.36091e-01    0.00   1.435
+   -2 6.07123e-01 6.07103e-01  -0.003 6.07103e-01    0.00   1.875
+    0 4.66074e-01 4.66053e-01  -0.005 4.66053e-01    0.00   2.282
+    2 3.23688e-01 3.23669e-01  -0.006 3.23669e-01    0.00   2.512
+    4 1.96542e-01 1.96527e-01  -0.008 1.96527e-01    0.00   2.417
+    6 1.01933e-01 1.01925e-01  -0.008 1.01925e-01    0.00   1.987
+    8 4.71758e-02 4.71730e-02  -0.006 4.71730e-02    0.00   1.457
+   10 2.30238e-02 2.30237e-02  -0.001 2.30216e-02    0.01   1.127
+   12 1.31761e-02 1.31763e-02  +0.002 1.31751e-02    0.01   1.022
+   14 8.11894e-03 8.11891e-03  -0.000 8.11889e-03    0.00   0.998
+   16 5.08124e-03 5.08101e-03  -0.005 5.08101e-03    0.00   0.990
+   18 3.19689e-03 3.19653e-03  -0.011 3.19653e-03    0.00   0.987
+   20 2.01650e-03 2.01607e-03  -0.021 2.01607e-03    0.00   0.987
+   22 1.27353e-03 1.27309e-03  -0.034 1.27309e-03    0.00   0.988
+   24 8.04740e-04 8.04332e-04  -0.051 8.04332e-04    0.00   0.989
+   26 5.08602e-04 5.08243e-04  -0.071 5.08243e-04    0.00   0.991
+   28 3.21430e-04 3.21131e-04  -0.093 3.21131e-04    0.00   0.992
+   30 2.03111e-04 2.02873e-04  -0.117 2.02873e-04    0.00   0.993
+max |rel diff| ZZB: 0.0011732444352496874
+
+=== ZZB / CRLB sensitivity ===
+variant                                     beta2 ZZBthr dB max|dZZB|%   ZZB@6dB  ZZB@10dB
+cont rho, span6, n_h=2001                  2.4480     5.950      0.000   0.10192   0.02302
+cont rho, span6, n_h=501                   2.4480     5.950      1.233   0.10192   0.02302
+cont rho, span6, n_h=20001                 2.4480     5.950      0.081   0.10192   0.02302
+cont rho, span12                           2.4486     5.955      0.043   0.10197   0.02302
+cont rho, span6 asym                       2.4481     5.951      0.009   0.10193   0.02302
+disc rho sps4, span6 asym (=project)       2.4484     5.952      0.179   0.10193   0.02302
+disc rho sps16, span6 sym                  2.4482     5.951      0.054   0.10192   0.02302
+disc rho sps4, span12 sym                  2.4488     5.956      0.087   0.10197   0.02302
+cont rho, NO valley filling                2.4480     5.950      0.016   0.10192   0.02302
+ZZB low-SNR (-40 dB): [1.32326197] Ta^2/12 = 1.3333333333333333
+first zero crossing of rho(h): 1.335  max |rho| for h>1.5: 0.12677113614330404

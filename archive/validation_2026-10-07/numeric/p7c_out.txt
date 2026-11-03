@@ -1,0 +1,11 @@
+DLL   7.0 dB n=6000: MSE/CRLB   5.26 95%CI [4.26 6.39]  P(|e|>0.5) 0.0423
+DLL   8.0 dB n=6000: MSE/CRLB   4.49 95%CI [3.42 5.75]  P(|e|>0.5) 0.0197
+DLL   9.0 dB n=6000: MSE/CRLB   3.45 95%CI [2.45 4.7 ]  P(|e|>0.5) 0.0082
+DLL  10.0 dB n=6000: MSE/CRLB   2.19 95%CI [1.43 3.06]  P(|e|>0.5) 0.0030
+DLL  11.0 dB n=6000: MSE/CRLB   1.74 95%CI [1.11 2.57]  P(|e|>0.5) 0.0012
+DLL  12.0 dB n=6000: MSE/CRLB   1.09 95%CI [1.05 1.13]  P(|e|>0.5) 0.0000
+DLL  13.0 dB n=6000: MSE/CRLB   1.10 95%CI [1.07 1.14]  P(|e|>0.5) 0.0000
+DLL  14.0 dB n=6000: MSE/CRLB   1.10 95%CI [1.06 1.14]  P(|e|>0.5) 0.0000
+DLL threshold: 10.4
+bootstrap 95% CI: [ 9.64 11.33]
+DLL threshold (2 dB grid points only): 10.27

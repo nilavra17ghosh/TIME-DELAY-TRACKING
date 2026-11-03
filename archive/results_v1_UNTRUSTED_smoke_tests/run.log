@@ -1,0 +1,9 @@
+Config: Config(n_chips=64, sps=4, rolloff=0.5, span=6, prior_width=4.0, mle_grid_step=0.015625, el_spacing=0.5, acq_step=0.5, dll_block_chips=4, dll_settle_factor=10, snr_db=array([-10.,  -8.,  -6.,  -4.,  -2.,   0.,   2.,   4.,   6.,   8.,  10.,
+        12.,  14.,  16.,  18.,  20.,  22.,  24.,  26.,  28.,  30.]), n_trials=2000, seed=2026)
+  DLL: K = 0.1176, B_L = 0.00781/chip, 1/(2B_L) = 64.0 chips, 160 updates
+SNR sweep (Ta = 4 chips):
+  E/N0 = -10.0 dB   MSE: MLE 2.493e+00  MMSE 1.256e+00  DLL 7.961e+01  (18417.2s)
+  E/N0 =  -8.0 dB   MSE: MLE 2.399e+00  MMSE 1.243e+00  DLL 4.919e+01  (53.8s)
+  E/N0 =  -6.0 dB   MSE: MLE 2.217e+00  MMSE 1.218e+00  DLL 2.931e+01  (32.3s)
+  E/N0 =  -4.0 dB   MSE: MLE 2.004e+00  MMSE 1.137e+00  DLL 1.776e+01  (30.9s)
+  E/N0 =  -2.0 dB   MSE: MLE 1.688e+00  MMSE 9.603e-01  DLL 1.009e+01  (33.6s)
