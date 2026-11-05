@@ -2,8 +2,8 @@
 
     BatchMLE.estimate        batch maximum-likelihood estimator    (Sprint 1)
     EarlyLateDLL             early-late delay-locked loop          (Sprint 2)
-    BatchMLE.estimate_both   + posterior-mean (MMSE) estimator     (beyond Sprint 4)
-    EarlyLateDLL.linear_theory_var  DLL variance theory            (beyond Sprint 4, = Sprint 5)
+    BatchMLE.estimate_both   + posterior-mean (MMSE) estimator     (extension beyond the brief)
+    EarlyLateDLL.linear_theory_var  DLL variance theory            (Sprint 5)
 """
 import numpy as np
 
@@ -251,7 +251,7 @@ class EarlyLateDLL:
             out += (np.sum(rx[idx] * (early - late), axis=1) - self.offset[j]) / self.k_bar
         return out / len(self.block_idx)
 
-    # ---- beyond Sprint 4 (Sprint 5 material): DLL variance theory --------------
+    # ---- Sprint 5: DLL variance theory --------------------------------------------
     def equivalent_weighting(self):
         """Weighting waveform G of the linearised loop: eps_final = <w, G> + transient.
 

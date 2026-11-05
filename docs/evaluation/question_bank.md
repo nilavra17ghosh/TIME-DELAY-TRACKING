@@ -185,7 +185,7 @@ Up to 70% the *theory* is known (Kay; Ziv–Zakai; Bell et al.; Betz–Kolodziej
 verified, self-consistent study for one concrete model, plus three quantitative observations we did not find stated in
 the literature for PN pilots: (i) the ZZB's looseness measured against the MMSE estimator (not just the MLE); (ii) its
 pilot-to-pilot spread; (iii) a decomposition of DLL failures into acquisition vs loss of lock. The research
-contribution we *propose* is the dynamic decomposition in `docs/research_proposal.md`.
+contribution we *propose* is the dynamic decomposition in `docs/evaluation/research_proposal.md`.
 
 **F2. Hasn't the ZZB already been applied to GNSS code tracking?**
 Yes — Emmanuele et al. (ICASSP 2012, modified ZZB), Emmanuele's Pisa thesis (2012), Liu et al. (ION ITM 2016). They

@@ -1,0 +1,836 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Threshold Effects in Delay Tracking — Study Guide</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],throwOnError:false});document.body.setAttribute('data-math','done');"></script>
+<style>
+:root{--ink:#0b0b0b;--ink2:#3d3c39;--muted:#6f6d68;--rule:#d9d7cf;--accent:#2a78d6;--accent2:#eb6834;--ok:#0f7a3a;--warn:#9a5b00;--bg:#ffffff;--box:#f5f4f0;--boxb:#e4e2da;}
+@page{size:A4;margin:18mm 17mm 18mm 17mm;}
+html{background:var(--bg);}
+body{font-family:"Georgia","Cambria","Times New Roman",serif;font-size:10.6pt;line-height:1.5;color:var(--ink);margin:0 auto;max-width:180mm;background:var(--bg);}
+h1,h2,h3,h4{font-family:"Segoe UI","Helvetica Neue",Arial,sans-serif;color:var(--ink);line-height:1.25;}
+h1{font-size:20pt;margin:0 0 4mm;}
+h2{font-size:15pt;margin:9mm 0 3mm;padding-bottom:1.5mm;border-bottom:1.5px solid var(--ink);break-after:avoid;}
+h3{font-size:12pt;margin:6mm 0 2mm;break-after:avoid;}
+h4{font-size:10.8pt;margin:4mm 0 1.5mm;break-after:avoid;}
+p{margin:0 0 2.6mm;}
+.part{break-before:page;}
+.part-title{font-family:"Segoe UI",Arial,sans-serif;font-size:11pt;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);margin:0 0 1mm;}
+table{border-collapse:collapse;width:100%;margin:2mm 0 4mm;font-size:9.4pt;break-inside:avoid;}
+th,td{border:1px solid var(--rule);padding:1.4mm 2mm;vertical-align:top;text-align:left;}
+th{background:var(--box);font-family:"Segoe UI",Arial,sans-serif;font-weight:600;}
+.box{background:var(--box);border:1px solid var(--boxb);border-left:4px solid var(--accent);padding:2.5mm 4mm;margin:3mm 0 4mm;break-inside:avoid;}
+.box.proof{border-left-color:var(--ink2);}
+.box.why{border-left-color:var(--accent2);}
+.box.warn{border-left-color:#b23b3b;}
+.box.say{border-left-color:var(--ok);}
+.box > p:last-child{margin-bottom:0;}
+.label{font-family:"Segoe UI",Arial,sans-serif;font-weight:700;font-size:9pt;letter-spacing:.06em;text-transform:uppercase;color:var(--ink2);display:block;margin-bottom:1mm;}
+.qed{float:right;}
+figure{margin:3mm 0 5mm;break-inside:avoid;text-align:center;}
+figure img{max-width:100%;border:1px solid var(--rule);}
+figcaption{font-size:9pt;color:var(--ink2);margin-top:1.5mm;text-align:left;}
+.small{font-size:9pt;color:var(--ink2);}
+.tag{display:inline-block;font-family:"Segoe UI",Arial,sans-serif;font-size:8pt;font-weight:700;padding:.3mm 1.6mm;border-radius:2px;color:#fff;}
+.done{background:var(--ok);} .partial{background:var(--warn);} .prop{background:#6a4fb3;}
+.q{font-weight:700;margin-top:3mm;break-after:avoid;}
+.a{margin-left:4mm;}
+.f{margin-left:4mm;color:var(--ink2);}
+.toc{columns:2;column-gap:10mm;font-size:9.6pt;}
+.toc p{margin:0 0 1mm;}
+.cover{height:240mm;display:flex;flex-direction:column;justify-content:center;}
+.cover .sub{font-size:13pt;color:var(--ink2);margin-bottom:8mm;}
+code{font-family:Consolas,"Courier New",monospace;font-size:9pt;background:var(--box);padding:0 1mm;}
+ol,ul{margin:0 0 2.6mm;padding-left:6mm;} li{margin-bottom:.8mm;}
+.katex-display{margin:2mm 0;overflow-x:auto;overflow-y:hidden;}
+@media screen{body{padding:12mm 0;}}
+</style>
+</head>
+<body>
+
+<section class="cover">
+  <p class="part-title">SDET Course Project 13 · Study Guide</p>
+  <h1>Threshold Effects in Time-Delay Tracking</h1>
+  <p class="sub">CRLB vs Ziv–Zakai bound for a delay-locked loop and a batch maximum-likelihood estimator of BPSK signals</p>
+  <p>This guide explains <b>every concept from first principles</b>, gives <b>complete derivations and proofs</b>, records
+  <b>every design decision and why it was made</b>, presents <b>all results with their uncertainty</b>, summarises the
+  <b>four literature surveys</b>, lays out the <b>proposal for the remaining 30%</b>, and ends with a
+  <b>question bank with follow-ups</b>.</p>
+  <p class="small">Prepared for the 70% evaluation, 5–6 November 2026. Repository: github.com/nilavra17ghosh/TIME-DELAY-TRACKING.
+  Every number is traceable to an executed notebook (notebooks 00–07).</p>
+  <p class="small"><span class="tag done">DONE</span> completed and verified &nbsp; <span class="tag partial">PARTIAL</span> partly done &nbsp; <span class="tag prop">PROPOSED</span> not yet implemented</p>
+</section>
+
+<section class="part">
+<p class="part-title">Contents</p>
+<div class="toc">
+<p><b>0</b> How to use this guide</p>
+<p><b>1</b> The problem in one picture</p>
+<p><b>2</b> Mathematical toolkit (with proofs)</p>
+<p><b>3</b> The signal model and why each choice was made</p>
+<p><b>4</b> Sprint 1 — the batch MLE</p>
+<p><b>5</b> Sprint 3 — the Cramér–Rao lower bound</p>
+<p><b>6</b> The threshold effect</p>
+<p><b>7</b> Sprint 4 — the Ziv–Zakai bound</p>
+<p><b>8</b> Sprint 2 — the delay-locked loop</p>
+<p><b>9</b> Experimental methodology and validation</p>
+<p><b>10</b> Results (Sprints 1–6)</p>
+<p><b>11</b> Decision log and mistakes we fixed</p>
+<p><b>12</b> What the four surveys taught us</p>
+<p><b>13</b> Limitations</p>
+<p><b>14</b> Proposal for the remaining 30%</p>
+<p><b>15</b> Question bank with follow-ups</p>
+<p><b>A</b> Notation and equation sheet</p>
+</div>
+
+<h2>0 How to use this guide</h2>
+<p>Read Sections 1–8 with a pen: every derivation is written so you can redo it on paper. Sections 9–13 are what you
+show and defend. Section 14 is the research proposal. Section 15 is for rehearsal: cover the answer, say it aloud,
+then check. The notebooks contain the same mathematics next to the code that implements it.</p>
+
+<table>
+<tr><th>Item</th><th>Status</th><th>Where</th></tr>
+<tr><td>Signal model, checks</td><td><span class="tag done">DONE</span></td><td>notebook 00</td></tr>
+<tr><td>Batch MLE, error vs SNR, error distributions</td><td><span class="tag done">DONE</span></td><td>notebook 01</td></tr>
+<tr><td>DLL: S-curve, pull-in, tracking, jitter</td><td><span class="tag done">DONE</span></td><td>notebook 02</td></tr>
+<tr><td>CRLB derivation, checks, overlay</td><td><span class="tag done">DONE</span></td><td>notebook 03</td></tr>
+<tr><td>ZZB derivation, limits, numerical ZZB</td><td><span class="tag done">DONE</span></td><td>notebook 04</td></tr>
+<tr><td>Four-curve comparison, MMSE, DLL theory, DLL failure modes</td><td><span class="tag done">DONE</span></td><td>notebook 05</td></tr>
+<tr><td>Precise thresholds (CIs, 5 pilots), DLL vs MLE</td><td><span class="tag done">DONE</span></td><td>notebook 06</td></tr>
+<tr><td>Prior-width study ($T_a$ = 1, 4, 16)</td><td><span class="tag done">DONE</span></td><td>notebook 07</td></tr>
+<tr><td>Explaining the pilot-to-pilot spread</td><td><span class="tag partial">PARTIAL</span></td><td>measured, not explained</td></tr>
+<tr><td>Report and final slides</td><td><span class="tag partial">PARTIAL</span></td><td>evaluation slides only</td></tr>
+<tr><td>Dynamic decomposition (research extension)</td><td><span class="tag prop">PROPOSED</span></td><td>Section 14</td></tr>
+</table>
+</section>
+
+<section class="part">
+<p class="part-title">Part I — Foundations</p>
+<h2>1 The problem in one picture</h2>
+<p>A transmitter sends a known waveform $s(t)$. The receiver observes it <b>delayed by an unknown $\tau$</b> and corrupted
+by noise:</p>
+$$ r(t) = s(t-\tau) + w(t). $$
+<p>Estimating $\tau$ is the core of GNSS ranging, radar, sonar and synchronisation: a delay error of one microsecond is
+300 m of range error. The project compares two estimators and two bounds:</p>
+<table>
+<tr><th></th><th>What it is</th><th>Key property</th></tr>
+<tr><td><b>Batch MLE</b></td><td>looks at a whole block of data and picks the delay whose replica fits best</td><td>optimal at high SNR; needs a search over delays</td></tr>
+<tr><td><b>DLL</b></td><td>a feedback loop that nudges its estimate using "early minus late" correlations</td><td>cheap, real-time; can lose lock</td></tr>
+<tr><td><b>CRLB</b></td><td>lower bound on the variance of unbiased estimators</td><td>local: only uses the curvature of the true correlation peak</td></tr>
+<tr><td><b>ZZB</b></td><td>lower bound on the MSE of any estimator, built from binary detection</td><td>global: sees distant wrong peaks and the prior</td></tr>
+</table>
+<p><b>The phenomenon — the threshold effect.</b> At high SNR the error is small and follows the CRLB. Below a certain SNR,
+noise occasionally makes a <i>wrong</i> delay look best; the estimate jumps far away and the mean-squared error rises far
+faster than the CRLB predicts. The project asks: <i>where is this threshold, does the ZZB predict it, and why do the
+DLL and the MLE behave differently?</i></p>
+<figure><img src="../../figures/s1_objective_one_trial.png" alt="objective function at two SNRs">
+<figcaption>Figure 1. The MLE objective over the search window for one observation. Left (20 dB): one clear peak at
+the true delay. Right (4 dB, a trial selected to show the mechanism): a noise-induced bump 1.3 chips away is higher than
+the true peak, so the estimator jumps there. This jump is the threshold effect.</figcaption></figure>
+
+<h2>2 Mathematical toolkit (with proofs)</h2>
+<p>Everything later rests on six facts. Each is proved here so nothing is taken on trust.</p>
+
+<h3>2.1 Bias, variance and mean-squared error</h3>
+<p>For an estimator $\hat\tau$ of $\tau$ with error $e=\hat\tau-\tau$:</p>
+$$ \underbrace{\mathbb E[e^2]}_{\text{MSE}} = \underbrace{\operatorname{var}(\hat\tau)}_{\text{spread}} + \underbrace{\big(\mathbb E[\hat\tau]-\tau\big)^2}_{\text{bias}^2}. $$
+<div class="box proof"><span class="label">Proof</span>
+<p>Write $e = (\hat\tau-\mathbb E\hat\tau)+(\mathbb E\hat\tau-\tau)$. Square and take expectations; the cross term is
+$2(\mathbb E\hat\tau-\tau)\,\mathbb E[\hat\tau-\mathbb E\hat\tau]=0$. <span class="qed">∎</span></p></div>
+<div class="box why"><span class="label">Why it matters here</span>
+<p>Below threshold our estimators become <b>biased</b> (a delay near the edge of the window is pulled inward). The CRLB
+bounds only the variance of <i>unbiased</i> estimators, while the ZZB bounds the MSE. So all our plots use MSE.</p></div>
+
+<h3>2.2 The Gaussian likelihood</h3>
+<p>If $r[n]=\mu_n(\theta)+w[n]$ with $w[n]\sim\mathcal N(0,\sigma^2)$ independent, the likelihood of the data is</p>
+$$ p(\mathbf r;\theta)=\prod_{n}\frac{1}{\sqrt{2\pi\sigma^2}}\exp\!\Big(-\frac{(r[n]-\mu_n(\theta))^2}{2\sigma^2}\Big),\qquad
+\ln p(\mathbf r;\theta)=\text{const}-\frac{1}{2\sigma^2}\sum_n\big(r[n]-\mu_n(\theta)\big)^2 . $$
+<p>Maximising the likelihood is therefore the same as <b>minimising the squared distance</b> between the data and the
+model — least squares.</p>
+
+<h3>2.3 The Q-function and binary detection in Gaussian noise</h3>
+<p>$Q(x)=\int_x^\infty \tfrac{1}{\sqrt{2\pi}}e^{-u^2/2}\,du = P(Z>x)$ for $Z\sim\mathcal N(0,1)$. Properties used later:
+$Q(0)=\tfrac12$, $Q$ decreases, $Q(x)\le\tfrac12e^{-x^2/2}$ for $x\ge0$.</p>
+<div class="box"><span class="label">Result (minimum error probability between two known signals)</span>
+<p>Observe $\mathbf r=\mathbf s_i+\mathbf w$, $i\in\{0,1\}$, equally likely, $\mathbf w\sim\mathcal N(0,\sigma^2 I)$. The
+smallest possible probability of deciding wrongly is</p>
+$$ P_{\min}=Q\!\left(\frac{\|\mathbf s_1-\mathbf s_0\|}{2\sigma}\right). $$</div>
+<div class="box proof"><span class="label">Proof</span>
+<p>With equal priors the optimal (MAP) rule picks the hypothesis with the larger likelihood, i.e. the signal closer to
+$\mathbf r$: decide 1 iff $\|\mathbf r-\mathbf s_1\|^2\lt\|\mathbf r-\mathbf s_0\|^2$. Expanding, this is
+$T=\langle\mathbf r,\mathbf s_1-\mathbf s_0\rangle \gt \tfrac12(\|\mathbf s_1\|^2-\|\mathbf s_0\|^2)$.
+Under hypothesis 0, $T$ is Gaussian with mean $\langle\mathbf s_0,\mathbf s_1-\mathbf s_0\rangle$ and standard deviation
+$\sigma\|\mathbf s_1-\mathbf s_0\|$. The distance from this mean to the threshold is
+$\tfrac12\|\mathbf s_1-\mathbf s_0\|^2$ (expand both). So the error probability under 0 is
+$Q\big(\tfrac12\|\mathbf s_1-\mathbf s_0\|^2/(\sigma\|\mathbf s_1-\mathbf s_0\|)\big)=Q(\|\mathbf s_1-\mathbf s_0\|/2\sigma)$,
+and by symmetry the same under 1. <span class="qed">∎</span></p></div>
+
+<h3>2.4 Fisher information and the Cramér–Rao inequality</h3>
+<p>The <b>score</b> is $S(\theta)=\partial_\theta\ln p(\mathbf r;\theta)$, and the <b>Fisher information</b> is
+$I(\theta)=\mathbb E[S(\theta)^2]$.</p>
+<div class="box"><span class="label">Theorem (CRLB)</span>
+<p>If $\mathbb E[S(\theta)]=0$ (regularity) and $\hat\theta$ is unbiased, then $\operatorname{var}(\hat\theta)\ge 1/I(\theta)$.</p></div>
+<div class="box proof"><span class="label">Proof</span>
+<p>Unbiasedness: $\int\hat\theta(\mathbf r)\,p(\mathbf r;\theta)\,d\mathbf r=\theta$. Differentiate in $\theta$:
+$\int\hat\theta\,\partial_\theta p\,d\mathbf r=1$, i.e. $\mathbb E[\hat\theta S]=1$. Because $\mathbb E[S]=0$, also
+$\mathbb E[(\hat\theta-\theta)S]=1$. By Cauchy–Schwarz, $1=\mathbb E[(\hat\theta-\theta)S]^2\le\mathbb E[(\hat\theta-\theta)^2]\,\mathbb E[S^2]=\operatorname{var}(\hat\theta)\,I(\theta)$. <span class="qed">∎</span></p>
+<p>Equality needs $S$ proportional to $\hat\theta-\theta$: then the estimator is <i>efficient</i>. The MLE becomes
+efficient as the SNR grows (asymptotic efficiency).</p></div>
+
+<h3>2.5 Autocorrelation, bandwidth and Parseval</h3>
+<p>The normalised autocorrelation of the waveform is $\rho(h)=\sum_n s(t_n)s(t_n-h)\big/\sum_n s(t_n)^2$, with
+$\rho(0)=1$ and $|\rho(h)|\le 1$ (Cauchy–Schwarz). The <b>mean-square (Gabor) bandwidth</b> is</p>
+$$ \beta^2=\frac{\sum_n s'(t_n)^2}{\sum_n s(t_n)^2}=\frac{\int(2\pi f)^2|S(f)|^2df}{\int|S(f)|^2df}. $$
+<p>The second equality is Parseval's theorem applied to $s'$, whose spectrum is $j2\pi f\,S(f)$. Two facts used later:</p>
+<div class="box proof"><span class="label">Fact: $\rho''(0)=-\beta^2$</span>
+<p>$\frac{d^2}{dh^2}\sum_n s(t_n)s(t_n-h)\Big|_{h=0}=\sum_n s(t_n)s''(t_n)$. Summation by parts (exact for a band-limited
+signal sampled above Nyquist, where sums equal integrals times $f_s$) gives $\sum s\,s''=-\sum s'^2$. Dividing by
+$\sum s^2$: $\rho''(0)=-\beta^2$, hence $1-\rho(h)\approx\tfrac12\beta^2h^2$ for small $h$. <span class="qed">∎</span></p></div>
+<div class="box warn"><span class="label">A subtlety we hit</span>
+<p>Summation by parts needs the waveform's slope to be continuous. Truncating the pulse with a hard cut left a tiny
+slope jump; samples landing on it made the measured curvature disagree with $\beta^2$. We fixed it by tapering the
+pulse smoothly over its last chip (Section 11).</p></div>
+
+<h3>2.6 A tail-integral identity</h3>
+<p>For a non-negative random variable $X$: $\;\mathbb E[X^2]=\int_0^\infty 2x\,P(X\ge x)\,dx.$</p>
+<div class="box proof"><span class="label">Proof</span>
+<p>$X^2=\int_0^X2x\,dx=\int_0^\infty 2x\,\mathbf 1\{X\ge x\}\,dx$. Take expectations and swap expectation and integral
+(allowed because the integrand is non-negative — Tonelli's theorem): $\mathbb E[X^2]=\int_0^\infty2x\,P(X\ge x)\,dx$. <span class="qed">∎</span></p></div>
+<p>This identity is the first step of the Ziv–Zakai bound: it turns the MSE into a sum over error <i>sizes</i>.</p>
+
+<h2>3 The signal model and why each choice was made</h2>
+<p class="small">Notebook 00. Every estimator and bound uses exactly this model, so theory and simulation always describe the same thing.</p>
+<h3>3.1 The model</h3>
+$$ s(t)=\sum_{k=0}^{N_c-1}a_k\,p(t-k),\qquad r[n]=s(t_n-\tau)+w[n],\quad t_n=\tfrac n4,\quad w[n]\sim\mathcal N(0,\sigma^2), $$
+<p>with a known pilot $a_k\in\{\pm1\}$ of $N_c=64$ chips, time in units of chips ($T_c=1$), and the raised-cosine pulse</p>
+$$ p(t)=\operatorname{sinc}(t)\,\frac{\cos(\pi\alpha t)}{1-(2\alpha t)^2},\qquad \alpha=0.5, $$
+<p>smoothly truncated to $|t|\le6$ chips. $p$ is a <b>Nyquist pulse</b>: $p(0)=1$ and $p(k)=0$ at every other integer, so at
+chip centres $s(k)=a_k$. The delay has a uniform prior $\tau\sim\mathcal U[\tau_c-T_a/2,\tau_c+T_a/2]$ with $T_a=4$ chips.</p>
+<figure><img src="../../figures/s0_signal_model.png" alt="signal model"><figcaption>Figure 2. The pulse and its
+spectrum (band-limited to 0.75 cycles/chip), the pilot with its delayed copy, and what the receiver sees at
+$E/N_0=20$ dB.</figcaption></figure>
+
+<h3>3.2 The SNR — derivation</h3>
+<p>Continuous white noise has two-sided spectral density $N_0/2$. Sampling at rate $f_s$ after an ideal band-limit gives
+samples of variance $\sigma^2=\tfrac{N_0}{2}f_s$. The signal energy is $E=\int s^2dt=T_s\sum_n s[n]^2$ (exact for a
+band-limited signal sampled above Nyquist). Therefore</p>
+$$ \frac{E}{N_0}=\frac{T_s\sum_n s[n]^2}{2\sigma^2T_s}=\frac{\sum_n s[n]^2}{2\sigma^2}\quad\Longrightarrow\quad \sigma^2=\frac{\sum_n s[n]^2}{2\,E/N_0}. $$
+<p>This is how the code sets the noise for a requested $E/N_0$. All plots use the <b>total batch</b> $E/N_0$ of the
+64-chip pilot; per chip, $E_c/N_0=E/N_0-10\log_{10}64=E/N_0-18.1$ dB. Check: requesting 10 gives a measured 10.03.</p>
+
+<h3>3.3 Decisions and their reasons</h3>
+<table>
+<tr><th>Decision</th><th>Reason</th><th>What goes wrong otherwise</th></tr>
+<tr><td>Raised-cosine pulse</td><td>band-limited like a real receiver; analytic spectrum</td><td>rectangular chips have infinite bandwidth ⇒ $\beta^2=\infty$ ⇒ CRLB = 0</td></tr>
+<tr><td>4 samples per chip</td><td>spectrum ends at 0.75 cycles/chip &lt; Nyquist (2)</td><td>aliasing; sums ≠ integrals</td></tr>
+<tr><td>Delay applied analytically</td><td>$s(t_n-\tau)$ evaluated exactly</td><td>interpolation error would contaminate high-SNR results</td></tr>
+<tr><td>Known pilot, coherent, real baseband, AWGN</td><td>closed-form likelihood, CRLB and ZZB</td><td>unknown bits/phase add nuisance parameters (future work)</td></tr>
+<tr><td>Uniform prior, $T_a=4$ chips</td><td>the ZZB is Bayesian and needs a prior; wide enough to contain wrong peaks</td><td>$T_a=1$ masks the threshold (Section 10.7)</td></tr>
+<tr><td>SNR = batch $E/N_0$</td><td>both bounds depend on total energy</td><td>per-sample SNR hides the dependence on pilot length</td></tr>
+<tr><td>MSE as the metric</td><td>estimators are biased below threshold; ZZB bounds MSE</td><td>variance would hide the bias</td></tr>
+</table>
+<div class="box why"><span class="label">Why the model changed after the first Sprint-1 script</span>
+<p>The original script (archived) used a 127-chip m-sequence, a Gaussian filter, a fixed delay and per-sample SNR, and
+showed the same qualitative result. It was replaced because the ZZB needs a <i>random</i> delay with a prior, the
+bounds are naturally written in $E/N_0$, and the raised cosine makes the CRLB checkable analytically.</p></div>
+<figure><img src="../../figures/s0_autocorrelation.png" alt="autocorrelation" style="max-width:80%"><figcaption>Figure 3. The
+pilot's autocorrelation $\rho(h)$: main lobe to about ±1.34 chips, side-lobes at most 0.13 beyond 1.5 chips. Its
+curvature at $h=0$ sets the CRLB; its side-lobes and the prior width set the ZZB.</figcaption></figure>
+</section>
+
+<section class="part">
+<p class="part-title">Part II — Estimators and bounds</p>
+<h2>4 Sprint 1 — the batch maximum-likelihood estimator</h2>
+<p class="small">Notebook 01. <span class="tag done">DONE</span></p>
+<h3>4.1 Derivation: the MLE is a correlator</h3>
+<p>With $\mu_n(\theta)=s(t_n-\theta)$, the Gaussian log-likelihood (Section 2.2) expands as</p>
+$$ \ln p(\mathbf r;\theta)=\text{const}-\frac{1}{2\sigma^2}\sum_n r[n]^2+\frac{1}{\sigma^2}\Big(\sum_n r[n]\,s(t_n-\theta)-\tfrac12\sum_n s(t_n-\theta)^2\Big). $$
+<p>The first sum does not depend on $\theta$, hence</p>
+<div class="box"><span class="label">Result</span>
+$$ \hat\tau_{\rm ML}=\arg\max_{\theta\in\text{window}}J(\theta),\qquad J(\theta)=\underbrace{\sum_n r[n]\,s(t_n-\theta)}_{\text{correlation with a shifted replica}}-\tfrac12\underbrace{\sum_n s(t_n-\theta)^2}_{\text{replica energy}}. $$</div>
+<ul>
+<li><b>Interpretation:</b> slide a clean replica over the data and pick the best match — a <i>matched filter</i>.</li>
+<li><b>No SNR needed:</b> $\sigma^2$ multiplies the whole function, so it does not move the arg-max.</li>
+<li><b>Energy term:</b> almost constant because the whole pulse train stays inside the observation window; kept so the
+estimator is exactly the MLE.</li>
+<li><b>Window constraint:</b> the search is restricted to the prior window. With a uniform prior, the MAP estimator equals
+this constrained MLE.</li>
+</ul>
+<h3>4.2 Sub-grid refinement — derivation</h3>
+<p>$J$ is computed on a grid of step $\Delta=1/64$ chip. Fit a parabola through the best grid point $g$ and its
+neighbours: $J(\theta_g+x\Delta)\approx a x^2+bx+c$ with $J_{g\pm1}=a\pm b+c$, $J_g=c$. So
+$a=\tfrac12(J_{g-1}-2J_g+J_{g+1})$ and $b=\tfrac12(J_{g+1}-J_{g-1})$. The vertex $x^\star=-b/2a$ gives</p>
+$$ \hat\theta=\theta_g+\frac{\Delta}{2}\,\frac{J_{g-1}-J_{g+1}}{J_{g-1}-2J_g+J_{g+1}}. $$
+<p>Check: without noise the error is 0.02 % of the CRLB at 30 dB — negligible.</p>
+
+<h3>4.3 The MMSE estimator (posterior mean)</h3>
+<p>With the uniform prior, Bayes' rule gives $p(\theta\mid\mathbf r)\propto\exp\!\big(J(\theta)/\sigma^2\big)$ on the window, and
+the estimator with the smallest possible MSE is the posterior mean</p>
+$$ \hat\tau_{\rm MMSE}=\frac{\int\theta\,e^{J(\theta)/\sigma^2}d\theta}{\int e^{J(\theta)/\sigma^2}d\theta}. $$
+<div class="box proof"><span class="label">Why the posterior mean minimises MSE</span>
+<p>For any estimator $g(\mathbf r)$, $\mathbb E[(\tau-g)^2\mid\mathbf r]=\operatorname{var}(\tau\mid\mathbf r)+(\mathbb E[\tau\mid\mathbf r]-g)^2$,
+minimised by $g=\mathbb E[\tau\mid\mathbf r]$; averaging over $\mathbf r$ keeps the minimum. <span class="qed">∎</span></p></div>
+<p>It is computed from the same grid of $J$ values (no extra cost) but needs $\sigma^2$. It matters because the ZZB bounds
+<i>every</i> estimator, so the fair comparison for the bound is the best one (Section 10.6).</p>
+
+<h2>5 Sprint 3 — the Cramér–Rao lower bound for our model</h2>
+<p class="small">Notebook 03. <span class="tag done">DONE</span></p>
+<h3>5.1 Derivation in four steps</h3>
+<ol>
+<li><b>Score:</b> $\partial_\tau\ln p=\frac{1}{\sigma^2}\sum_n(r[n]-\mu_n)\,\mu_n'=\frac1{\sigma^2}\sum_n w[n]\,\mu_n'(\tau)$. Its mean is 0 because $\mathbb E\,w=0$ (regularity holds).</li>
+<li><b>Fisher information:</b> $I=\mathbb E[(\partial_\tau\ln p)^2]=\frac{1}{\sigma^4}\sum_n\sum_m\mathbb E[w_nw_m]\mu_n'\mu_m'=\frac{1}{\sigma^2}\sum_n\mu_n'^2$ (independence: $\mathbb E[w_nw_m]=\sigma^2\delta_{nm}$).</li>
+<li><b>Delay model:</b> $\mu_n'(\tau)=\partial_\tau s(t_n-\tau)=-s'(t_n-\tau)$, so $I=\frac1{\sigma^2}\sum_n s'(t_n-\tau)^2$.</li>
+<li><b>Physical form:</b> substitute $\sigma^2=\sum s^2/(2E/N_0)$:</li>
+</ol>
+<div class="box"><span class="label">Result</span>
+$$ \operatorname{var}(\hat\tau)\ \ge\ \text{CRLB}=\frac{1}{2\,(E/N_0)\,\beta^2}=\frac{1}{2\,N_c\,(E_c/N_0)\,\beta^2}. $$</div>
+<ul>
+<li><b>Energy:</b> doubling the pilot length or the SNR halves the CRLB.</li>
+<li><b>Bandwidth:</b> steeper edges (larger $\beta^2$) give a sharper correlation peak and a lower CRLB. Rectangular chips give $\beta^2=\infty$, which is why we band-limit.</li>
+<li><b>Independent of $\tau$</b> as long as the pulse train stays inside the window (verified: $\beta^2$ varies by $10^{-5}$ across delays).</li>
+</ul>
+<h3>5.2 Checks</h3>
+<p>$\beta^2$ computed from the spectrum (FFT at 64 samples/chip) is 2.4470; from the samples (the code) 2.4481 — agreement to
+0.05 %. For the isolated pulse $\beta^2=2.838$; averaged over 400 random pilots, 2.873.</p>
+<h3>5.3 A finding: the CRLB depends on the pilot</h3>
+<p>$\beta^2$ is the bandwidth of the actual chip pattern: more sign changes mean more high-frequency energy. Over 400 random
+64-chip pilots, $\beta^2$ ranges from 1.77 to 4.27 — a factor of 2.4 in the CRLB. Consequence: every estimator and bound
+must use the <b>same</b> pilot, and thresholds defined relative to the CRLB move from pilot to pilot.</p>
+<figure><img src="../../figures/s3_beta2_pilots.png" alt="beta2 across pilots" style="max-width:78%"><figcaption>Figure 4. $\beta^2$ for 400 random pilots; our pilot (seed 2026) has 2.448.</figcaption></figure>
+<h3>5.4 Where the CRLB stops making sense — three reasons</h3>
+<ol>
+<li><b>It assumes an unbiased estimator.</b> For a delay fixed 0.5 chip from the edge, the MLE's bias is −1.18 chips at
+−10 dB and −0.47 chips at 2 dB (pulled towards the window centre), ≈ 0 above 14 dB.</li>
+<li><b>It is local.</b> $I(\tau)$ involves only $s'$ at the true delay — the curvature of the <i>true</i> peak. It cannot
+know that other peaks exist (Figure 1).</li>
+<li><b>It ignores the prior.</b> Below about −8 dB the CRLB exceeds the prior variance $T_a^2/12$, i.e. it "allows" more
+error than knowing nothing — useless as a bound there.</li>
+</ol>
+<p><b>Edge effect (small).</b> For delays within 0.05 chip of a window edge, the constrained MLE achieves MSE/CRLB = 0.63 at
+20 dB (half of its possible errors are cut off). This changes the averaged MSE by about 1 %.</p>
+<figure><img src="../../figures/s3_crlb_vs_mle.png" alt="CRLB vs MLE"><figcaption>Figure 5. Left: MLE MSE/CRLB with 95 % band —
+1 above ≈ 12–14 dB. Right: MSE, CRLB, prior variance and the conditional bias² for a delay near the edge.</figcaption></figure>
+
+<h2>6 The threshold effect</h2>
+<p>Above threshold the estimate always lands on the true correlation peak and errors are small and Gaussian. In the
+threshold region a small fraction $P$ of trials are <b>gross errors</b> (|e| &gt; 0.5 chip, outside the main lobe). A
+useful mental model (the idea behind the method of interval errors, MIE):</p>
+$$ \text{MSE}\approx(1-P)\cdot\text{CRLB}+P\cdot\sigma^2_{\rm gross}, $$
+<p>where $\sigma^2_{\rm gross}$ is the mean-square size of a wrong-peak error (of order the prior width squared).
+Because $\sigma^2_{\rm gross}\gg\text{CRLB}$, even $P=1\%$ dominates: at 10 dB a 1 % rate of 2-chip errors adds 0.04
+chips², twice the CRLB. The threshold is therefore a change in the <b>type</b> of error, not a gradual widening.</p>
+<figure><img src="../../figures/s1_mle_error_hist.png" alt="error histograms"><figcaption>Figure 6. MLE error histograms (log
+count) at 18, 10 and 2 dB: a narrow Gaussian core, then a growing population of gross errors spread over the
+window.</figcaption></figure>
+<p><b>Very low SNR.</b> On pure noise the MLE's MSE is 3.09 chips² — larger than the prior variance 1.33 — because the
+arg-max of a noise process piles up at the window edges (about 20 % of estimates sit exactly on an edge). The MMSE
+estimator instead tends to the window centre and its MSE to $T_a^2/12$.</p>
+</section>
+
+<section class="part">
+<h2>7 Sprint 4 — the Ziv–Zakai bound, derived for this problem</h2>
+<p class="small">Notebook 04. <span class="tag done">DONE</span> (derivation) · numerical evaluation also done (Sprint-5 material).</p>
+<h3>7.1 The idea</h3>
+<p>If an estimator could locate $\tau$ to within $h/2$, it could tell "$\tau=\varphi$" from "$\tau=\varphi+h$". Detection
+theory gives the best possible error rate for that test; therefore the estimator must make errors of size about $h/2$ at
+least that often. Doing this for <b>every</b> separation $h$ — small and large — and adding up gives a lower bound on the
+MSE that sees both local and distant (wrong-peak) errors.</p>
+<h3>7.2 Derivation, step by step</h3>
+<p><b>Step 1 — MSE as a sum over error sizes.</b> Apply Section 2.6 to $X=|e|$ and substitute $x=h/2$ ($2x\,dx=\tfrac h2dh$):</p>
+$$ \text{MSE}=\int_0^\infty\frac h2\,P\!\left(|e|\ge\tfrac h2\right)dh. \tag{1}$$
+<p><b>Step 2 — split by direction and shift.</b> Condition on the true delay and substitute $\varphi\to\varphi+h$ in the second part:</p>
+$$ P(|e|\ge\tfrac h2)=\int\Big[p(\varphi)P(e\ge\tfrac h2\mid\varphi)+p(\varphi+h)P(e\le-\tfrac h2\mid\varphi+h)\Big]d\varphi. \tag{2}$$
+<p><b>Step 3 — recognise a detector.</b> Fix $\varphi,h$ and consider $H_0:\tau=\varphi$ vs $H_1:\tau=\varphi+h$ with weights
+$p(\varphi)$, $p(\varphi+h)$. Use the estimator to decide: <i>choose $H_1$ iff $\hat\tau\ge\varphi+h/2$</i>. Under $H_0$
+it errs exactly when $e\ge h/2$; under $H_1$ exactly when $e\lt-h/2$. So the bracket in (2) is
+$(p(\varphi)+p(\varphi+h))\times$ (error probability of this detector), which is at least that of the optimal detector:</p>
+$$ P(|e|\ge\tfrac h2)\ \ge\ \int\big(p(\varphi)+p(\varphi+h)\big)\,P_{\min}(\varphi,\varphi+h)\,d\varphi. \tag{3}$$
+<p><b>Step 4 — combine and valley-fill.</b> Substituting (3) into (1):</p>
+$$ \text{MSE}\ \ge\ \frac12\int_0^\infty h\;\mathcal V\Big\{\int\big(p(\varphi)+p(\varphi+h)\big)P_{\min}\,d\varphi\Big\}\,dh,\qquad \mathcal V\{g\}(h)=\max_{\eta\ge0}g(h+\eta). \tag{4}$$
+<p>Valley filling is allowed because the left side of (3) can only decrease with $h$, so it also exceeds every later value
+of the right side (Bell et al., 1997). For our pilot it changes the bound by less than 0.01 %.</p>
+<p><b>Step 5 — the optimal detector for our signals.</b> $H_0$, $H_1$ are two known signals $s(\cdot-\varphi)$, $s(\cdot-\varphi-h)$ in white
+Gaussian noise, equally likely under the uniform prior. By Section 2.3, $P_{\min}=Q(\|\mathbf s_1-\mathbf s_0\|/2\sigma)$, and
+$\|\mathbf s_1-\mathbf s_0\|^2=\|\mathbf s_0\|^2+\|\mathbf s_1\|^2-2\langle\mathbf s_0,\mathbf s_1\rangle=2\sum s^2(1-\rho(h))$. With
+$\sum s^2/(2\sigma^2)=E/N_0$:</p>
+$$ P_{\min}(h)=Q\!\left(\sqrt{\tfrac{E}{N_0}\big(1-\rho(h)\big)}\right). \tag{5}$$
+<p>Two delays are hard to distinguish when the signal is weak <i>or</i> when the shifted signals look alike ($\rho(h)$ near 1:
+inside the main lobe or on a side-lobe). $P_{\min}$ does not depend on $\varphi$ (verified to $2\cdot10^{-5}$).</p>
+<p><b>Step 6 — the uniform prior.</b> Both $\varphi$ and $\varphi+h$ must lie in the window: a range of length $T_a-h$, each density $1/T_a$, so
+$\int(p(\varphi)+p(\varphi+h))d\varphi=2(1-h/T_a)$ for $0\le h\le T_a$. The factors $\tfrac12$ and 2 cancel:</p>
+<div class="box"><span class="label">Result — the ZZB for our problem</span>
+$$ \text{ZZB}=\int_0^{T_a}h\;\mathcal V\Big\{\Big(1-\frac h{T_a}\Big)\,Q\Big(\sqrt{\tfrac{E}{N_0}\,(1-\rho(h))}\Big)\Big\}\,dh. $$</div>
+
+<h3>7.3 The two limits — proofs</h3>
+<div class="box proof"><span class="label">No signal: ZZB → $T_a^2/12$</span>
+<p>$E/N_0\to0$ gives $Q(0)=\tfrac12$: $\;\int_0^{T_a}\tfrac h2(1-\tfrac h{T_a})dh=\tfrac{T_a^2}4-\tfrac{T_a^2}6=\tfrac{T_a^2}{12}$, the prior variance. No
+estimator can do better without data, and "answer the window centre" achieves it. Unlike the CRLB, the bound stays finite. <span class="qed">∎</span></p></div>
+<div class="box proof"><span class="label">Strong signal: ZZB → CRLB</span>
+<p>Only small $h$ contribute (otherwise $Q\approx0$). There $1-\rho(h)\approx\tfrac12\beta^2h^2$ (Section 2.5) and $1-h/T_a\approx1$.
+With $a^2=\tfrac12(E/N_0)\beta^2$: $\;\text{ZZB}\to\int_0^\infty h\,Q(ah)\,dh$. Integrate by parts with $Q'(x)=-\phi(x)$:</p>
+$$ \int_0^\infty hQ(ah)\,dh=\Big[\tfrac{h^2}2Q(ah)\Big]_0^\infty+\frac a2\int_0^\infty h^2\phi(ah)\,dh=\frac{1}{2a^2}\int_0^\infty u^2\phi(u)\,du=\frac{1}{2a^2}\cdot\frac12=\frac{1}{4a^2}, $$
+<p>and $1/(4a^2)=1/(2(E/N_0)\beta^2)=$ CRLB. <span class="qed">∎</span></p></div>
+<p>Numerically: the ZZB equals 1.3323 at zero SNR ($T_a^2/12=1.3333$) and ZZB/CRLB = 0.997 at 40 dB.</p>
+
+<h3>7.4 Intuition and how to explain it</h3>
+<figure><img src="../../figures/s4_zzb_intuition.png" alt="ZZB intuition"><figcaption>Figure 7. Left: $P_{\min}(h)$ at 0, 8 and
+20 dB. Right: the integrand $h(1-h/T_a)P_{\min}(h)$ — at 20 dB only tiny separations contribute (local, CRLB-like); at 0 dB
+separations far outside the main lobe contribute heavily (the gross errors).</figcaption></figure>
+<div class="box say"><span class="label">Say it simply</span>
+<p>"Suppose an estimator is usually within half a chip. Then I could use it to tell 'delay φ' from 'delay φ+1 chip'. Detection
+theory says how often <i>any</i> detector must confuse those two — that depends only on the SNR and how similar the two
+shifted signals are. So the estimator must make errors that big at least that often. Doing this for every separation and
+adding up gives a lower bound on the MSE. At high SNR only tiny separations get confused and I recover the CRLB; at low
+SNR even distant delays are confused and the bound rises — that's the threshold. With no signal, the bound is the prior
+variance."</p></div>
+<figure><img src="../../figures/s4_zzb_vs_crlb_vs_mle.png" alt="ZZB vs CRLB vs MLE" style="max-width:82%"><figcaption>Figure 8.
+The ZZB reproduces both limits, bends away from the CRLB at ≈ 6 dB, and lies below the simulated MLE everywhere (within the
+95 % Monte Carlo interval).</figcaption></figure>
+
+<h2>8 Sprint 2 — the early–late delay-locked loop</h2>
+<p class="small">Notebook 02. <span class="tag done">DONE</span></p>
+<h3>8.1 The discriminator</h3>
+<p>With current estimate $\theta$ and error $\varepsilon=\theta-\tau$, correlate the data with replicas shifted by $\pm d/2$ ($d=0.5$ chip):</p>
+$$ E=\sum_n r[n]\,s(t_n-\theta+\tfrac d2),\qquad L=\sum_n r[n]\,s(t_n-\theta-\tfrac d2). $$
+<p>Without noise each is a sample of the autocorrelation $R(h)=\sum_n s(t_n)s(t_n-h)$: $E-L=R(\varepsilon-\tfrac d2)-R(\varepsilon+\tfrac d2)$.
+$R$ is symmetric with its peak at 0, so $E=L$ when $\varepsilon=0$, and a Taylor expansion gives</p>
+$$ E-L\approx-2R'(\tfrac d2)\,\varepsilon=k\,\varepsilon,\qquad k\gt0\ (\text{since }R'(d/2)\lt0). $$
+<p>Dividing by $k$, the discriminator $D=(E-L)/k\approx\varepsilon$ measures the error. The whole curve $D(\varepsilon)$ is the <b>S-curve</b>.</p>
+<figure><img src="../../figures/s2_dll_s_curve.png" alt="S-curve" style="max-width:80%"><figcaption>Figure 9. The S-curve:
+slope 1 at zero, peak 0.44 at ε = 0.70 chip, correct sign out to ±1.80 chips (pull-in range).</figcaption></figure>
+<h3>8.2 The loop and its noise averaging — derivation</h3>
+<p>Every $M=4$ chips: $\theta_{j+1}=\theta_j-K\,D_j$. In the linear region $D_j=\varepsilon_j+n_j$, so</p>
+$$ \varepsilon_{j+1}=(1-K)\,\varepsilon_j-K\,n_j . $$
+<ul>
+<li><b>Stability:</b> errors decay iff $|1-K|\lt1$, i.e. $0\lt K\lt2$.</li>
+<li><b>Noise averaging:</b> the error is the noise filtered by $h_k=K(1-K)^k$. For independent $n_j$ of variance $\sigma_n^2$,
+$\operatorname{var}(\varepsilon)=\sigma_n^2\sum_kh_k^2=\sigma_n^2\frac{K^2}{1-(1-K)^2}=\sigma_n^2\frac{K}{2-K}$.</li>
+<li>Averaging $N$ independent measurements gives $\sigma_n^2/N$, so the loop is equivalent to averaging $N_{\rm eff}=(2-K)/K$
+updates; its noise bandwidth is $B_LT_I=\sum h_k^2/(2(\sum h_k)^2)=K/(2(2-K))$.</li>
+</ul>
+<p><b>Design:</b> $N_{\rm eff}=64/4=16$ ⇒ $K=2/17\approx0.118$ ⇒ $1/(2B_L)=64$ chips: the locked loop averages as much signal as the
+64-chip batch. The loop runs 160 updates = 640 chips in total.</p>
+<h3>8.3 Implementation details that were necessary (each found by testing)</h3>
+<table>
+<tr><th>Detail</th><th>What we do</th><th>What went wrong without it</th></tr>
+<tr><td>Acquisition</td><td>coarse search (0.5-chip grid) over the prior on the first 64 chips, then track</td><td>the loop only pulls in within ±1.8 chips; the prior is ±2</td></tr>
+<tr><td>Block replicas</td><td>block $j$'s replica contains only its 4 chips</td><td>full replica over a hard-cut window: bias ≈ 33 % of the CRLB at 30 dB</td></tr>
+<tr><td>Offset calibration $b_j$</td><td>subtract each block's noise-free discriminator output at zero error</td><td>neighbour-chip overlap gives a fixed offset: MSE ≈ 2× CRLB at 30 dB. $b_j$ depends only on the known pilot (identical results with deliberately wrong timing)</td></tr>
+<tr><td>Constant gain $\bar k$</td><td>normalise by the average slope</td><td>per-block slopes vary 0.29–1.7× the average; dividing by small ones amplifies noise</td></tr>
+<tr><td>Windows follow θ</td><td>integration windows placed by the loop's own timing</td><td>fixed windows distorted low-SNR behaviour</td></tr>
+<tr><td>Same pilot, repeated</td><td>the 64-chip pilot repeated like a GNSS code</td><td>a different pilot made the DLL appear to beat the CRLB</td></tr>
+</table>
+<h3>8.4 Locked accuracy and its theory</h3>
+<p>Linearised, the final error is a weighted sum of the noise samples, $\varepsilon=\langle\mathbf w,G\rangle$, with $G=\sum_jc_jg_j$
+($g_j$ = early-minus-late replica of block $j$, $c_j=(K/\bar k)\prod_{i\gt j}(1-Kk_i/\bar k)$). Hence exactly
+$\operatorname{var}(\varepsilon)=\sigma^2\|G\|^2$. Measured: DLL MSE/CRLB = 1.088, 1.083, 1.039 (±0.024) at 15, 20, 25 dB;
+theory 1.071.</p>
+<div class="box warn"><span class="label">Be precise about this number</span>
+<p>"DLL ≈ CRLB" holds <b>because we chose K</b>. A narrower loop averages more of its 640 chips and goes <i>below</i> the
+64-chip CRLB — not a violation, because that CRLB is not a bound for an estimator using 640 chips. The 7 % excess comes from
+early–late being a finite-difference approximation of the derivative an optimal estimator would use.</p></div>
+<figure><img src="../../figures/s2_dll_tracking_run.png" alt="tracking runs"><figcaption>Figure 10. DLL error over time,
+12 runs at 20, 8 and 0 dB: tight lock, noisy lock, and loss of lock.</figcaption></figure>
+</section>
+
+<section class="part">
+<p class="part-title">Part III — Evidence</p>
+<h2>9 Experimental methodology and validation</h2>
+<h3>9.1 Monte Carlo</h3>
+<p>For each SNR we draw $N$ independent trials (random delay from the prior, fresh noise, one estimate) and report
+$\widehat{\text{MSE}}=\frac1N\sum_ie_i^2$. Its standard error is $\text{sd}(e^2)/\sqrt N$. Near the threshold $e^2$ is heavy-tailed
+(rare large errors), so the MSE is uncertain exactly where we want to locate the threshold — the reason for many trials:
+2000 per point (notebooks 01, 05), 20,000 (notebook 06, MLE/MMSE), 10,000 (notebook 07), 4000 (DLL).</p>
+<h3>9.2 Threshold definitions (fixed before looking at results)</h3>
+<ul>
+<li><b>MSE criterion:</b> the highest SNR at which MSE/CRLB first exceeds 2 (3 dB), scanning down from high SNR.</li>
+<li><b>Gross-error criterion:</b> the highest SNR at which $P(|e|\gt0.5\text{ chip})$ first exceeds 1 %. One outlier moves
+this by only $1/N$, whereas it can multiply the MSE.</li>
+</ul>
+<p>Thresholds are interpolated linearly in (dB, log y) between grid points.</p>
+<h3>9.3 Confidence intervals by bootstrap</h3>
+<p>Resample the $N$ trials at each SNR with replacement, recompute the threshold, repeat 200–300 times, report the
+2.5–97.5 % percentiles. Differences (e.g. DLL − MLE) are computed sample by sample from the bootstrap draws so the interval
+includes both uncertainties. MLE and MMSE share the same noise (paired), which makes their difference precise.</p>
+<h3>9.4 How we know the code is right</h3>
+<table>
+<tr><th>Check</th><th>Result</th></tr>
+<tr><td>Analytic checks in every notebook (Nyquist property, SNR calibration, noise-free estimators, ZZB limits, S-curve slope)</td><td>all pass</td></tr>
+<tr><td>Fast regression tests (<code>tests/test_core.py</code>, 7 tests against analytic facts)</td><td>pass in ≈ 35 s</td></tr>
+<tr><td>Independent from-scratch re-implementation (Oct 7)</td><td>CRLB agrees to 0.02 %, ZZB to 0.12 %, MLE MSE within Monte Carlo error</td></tr>
+<tr><td>Adversarial code audit (Oct 7)</td><td>no estimator uses the true delay; DLL calibration independent of timing phase</td></tr>
+<tr><td>Literature check of every formula (Oct 7)</td><td>ZZB form, $P_{\min}$, limits, CRLB, loop formulas all correct</td></tr>
+</table>
+<p>All random seeds are fixed, so every number in this guide reproduces exactly.</p>
+
+<h2>10 Results</h2>
+<h3>10.1 Sprint 1 — the MLE follows the CRLB, then breaks away</h3>
+<figure><img src="../../figures/s1_mle_mse_vs_snr.png" alt="MLE MSE vs SNR" style="max-width:82%"><figcaption>Figure 11. Batch MLE MSE (2000 trials/point), CRLB and prior variance.</figcaption></figure>
+<table>
+<tr><th>Regime</th><th>Evidence</th><th>Meaning</th></tr>
+<tr><td>High SNR (≥ 12–14 dB)</td><td>MSE/CRLB = 0.997 on average over 14–30 dB (points 0.96–1.03)</td><td>the MLE is efficient: it attains the CRLB</td></tr>
+<tr><td>Threshold (≈ 6–12 dB)</td><td>gross errors 0.8 % at 10 dB, 2.1 % at 8 dB, 8.7 % at 6 dB</td><td>wrong-peak errors take over</td></tr>
+<tr><td>Low SNR (≤ 0 dB)</td><td>MSE above the prior variance; 3.09 chips² on pure noise</td><td>no useful information; edge pile-up</td></tr>
+</table>
+
+<h3>10.2 Sprint 2 — the DLL works and has a limited pull-in range</h3>
+<p>Slope of the S-curve at zero 1.000; pull-in range ±1.80 chips; noise-free final error ≈ $10^{-7}$ chips; locked MSE
+1.04–1.09 × CRLB (by design of $K$); at 0 dB some runs lose lock (Figure 10).</p>
+
+<h3>10.3 Sprint 3 — the CRLB is right where it should be and wrong where it must be</h3>
+<p>Derived and implemented CRLB agree with a frequency-domain computation to 0.05 %; MLE attains it above threshold;
+three identified reasons it fails below (Section 5.4); pilot dependence factor 2.4.</p>
+
+<h3>10.4 Sprint 4 — the ZZB is a valid, informative bound</h3>
+<p>Both limits reproduced (1.3323 vs 1.3333; 0.997 × CRLB at 40 dB); the bound lies below the simulated MLE at every SNR
+within the 95 % interval; it departs from the CRLB at 5.95 dB.</p>
+
+<h3>10.5 Sprint 5 — four curves on one plot</h3>
+<figure><img src="../../figures/s5_four_curves.png" alt="four-curve comparison" style="max-width:86%"><figcaption>Figure 12.
+CRLB, ZZB, batch MLE, batch MMSE and DLL (2000 / 1000 trials per point), plus the ZZB for the DLL's own 640-chip data
+(dotted) — the only one of the bounds that is valid for the DLL.</figcaption></figure>
+<ul>
+<li>Above ≈ 12 dB everything sits on the 64-chip CRLB (DLL slightly above, by design).</li>
+<li>At low SNR the MMSE flattens at the prior variance as the ZZB predicts (−10 dB: MMSE 1.28, ZZB 1.02, MLE 2.70).</li>
+<li>Below threshold the DLL is far worse than both batch estimators, and it stays above the ZZB for its own data.</li>
+</ul>
+<figure><img src="../../figures/s6_dll_failure_mechanisms.png" alt="DLL failure mechanisms"><figcaption>Figure 13. Left:
+gross-error probability; DLL failures split into "acquired outside the pull-in range" and "lost lock while tracking" (the
+two add up to the total). Right: below threshold the DLL's MSE grows with observation time.</figcaption></figure>
+<p>At 0 dB, 54 % of DLL runs end with a gross error: 12 % acquired outside the pull-in range, 42 % lost lock while
+tracking. Loss of lock is the dominant DLL failure — a mechanism the batch MLE does not have.</p>
+
+<h3>10.6 Sprint 6 — the threshold, located precisely</h3>
+<figure><img src="../../figures/s6_threshold_precise.png" alt="precise thresholds"><figcaption>Figure 14. Left: departure from
+the CRLB with 95 % bands (pilot 2026; 20,000 trials/point for MLE/MMSE, 4000 for the DLL). Right: thresholds with 95 %
+CIs for five random pilots.</figcaption></figure>
+<table>
+<tr><th>Pilot 2026, MSE criterion</th><th>Threshold</th><th>95 % CI</th></tr>
+<tr><td>ZZB (bound)</td><td>5.95 dB</td><td>—</td></tr>
+<tr><td>Batch MMSE (best possible estimator)</td><td>8.54 dB</td><td>[8.35, 9.07]</td></tr>
+<tr><td>Batch MLE</td><td>9.52 dB</td><td>[9.00, 9.66]</td></tr>
+<tr><td>DLL</td><td>9.38 dB</td><td>[8.72, 9.98]</td></tr>
+</table>
+<p><b>The gap to the bound splits in two:</b> bound looseness MMSE − ZZB = 2.59 dB, and MLE sub-optimality MLE − MMSE =
+0.85 dB (CI 0.25–1.24, significant). About three-quarters of the gap is the bound being optimistic — built from
+<i>pairwise</i> tests while an estimator must reject <i>all</i> competing delays.</p>
+<p><b>Five pilots:</b> MLE − ZZB ranges 2.7–5.4 dB (mean 3.5); MMSE − ZZB 2.3–4.7 dB (mean 2.9); the MMSE is ahead of the MLE
+for every pilot. The ZZB threshold moves a lot (4.4–8.1 dB) and nearly follows each pilot's $\beta^2$, while the MLE
+threshold moves less (9.0–10.8 dB): because thresholds are defined relative to each pilot's own CRLB, a pilot with larger
+$\beta^2$ leaves its (lower) CRLB sooner.</p>
+<p><b>DLL vs MLE depends on the criterion:</b></p>
+<ul>
+<li>MSE criterion: DLL − MLE = −0.12 dB, CI [−0.87, 0.59] → <b>not significant</b>.</li>
+<li>Gross-error criterion: DLL 8.81 dB vs MLE 9.49 dB → the DLL is <b>0.68 dB more robust</b> (CI 0.40–0.99): it observes 640
+chips and recovers from wrong acquisitions within its pull-in range.</li>
+<li>Far below threshold the DLL is much worse (loss of lock, unbounded drift).</li>
+</ul>
+<p><b>A subtlety:</b> the MMSE has a lower MSE threshold but a slightly higher gross-error threshold than the MLE (9.63 vs
+9.49 dB): by hedging between peaks, it makes more moderate errors just above 0.5 chip and fewer very large ones.</p>
+
+<h3>10.7 Supplement — the prior width moves the threshold</h3>
+<figure><img src="../../figures/s6_prior_width.png" alt="prior width study"><figcaption>Figure 15. Same pilot, prior widths
+1, 4 and 16 chips (10,000 trials/point).</figcaption></figure>
+<table>
+<tr><th>$T_a$</th><th>ZZB</th><th>MMSE (95 % CI)</th><th>MLE (95 % CI)</th><th>MLE − ZZB</th></tr>
+<tr><td>1 chip</td><td>none</td><td>masked</td><td>masked</td><td>—</td></tr>
+<tr><td>4 chips</td><td>5.95 dB</td><td>8.84 [8.58, 9.14]</td><td>9.34 [8.81, 10.08]</td><td>3.4 dB</td></tr>
+<tr><td>16 chips</td><td>11.56 dB</td><td>12.99 [11.97, 13.37]</td><td>13.01 [11.95, 13.41]</td><td>1.5 dB</td></tr>
+</table>
+<ul>
+<li>A wider window has more places for a winning noise peak, so the threshold moves up ≈ 3.7 dB from $T_a=4$ to 16.</li>
+<li>With $T_a=1$ there is no distant peak: the threshold is <b>masked</b> (the MSE never exceeds 2×CRLB).</li>
+<li>The ZZB is relatively tighter for the wide prior (gap 3.4 → 1.5 dB) — an observation we have not yet explained.</li>
+</ul>
+
+<h2>11 Decision log and the mistakes we fixed</h2>
+<p>Being able to say <i>why</i> each choice was made, and what went wrong before, is what convinces an examiner that
+the work is understood.</p>
+<table>
+<tr><th>When</th><th>Decision / correction</th><th>Why</th></tr>
+<tr><td>Sprint 1</td><td>m-sequence script replaced by the raised-cosine, random-delay model</td><td>ZZB needs a prior; exact delay; analytic spectrum</td></tr>
+<tr><td>Oct 6</td><td>Prior width 1 → 4 chips</td><td>with 1 chip the MLE never left the CRLB (threshold masked)</td></tr>
+<tr><td>Oct 6</td><td>DLL given the MLE's pilot, repeated periodically</td><td>with a different pilot the DLL appeared to beat the CRLB (the CRLB is pilot-specific)</td></tr>
+<tr><td>Oct 6</td><td>Block replicas, offset calibration, constant gain</td><td>removed biases of 33 % and 100 % of the CRLB and a noise blow-up</td></tr>
+<tr><td>Oct 7</td><td>Error bars and two threshold criteria</td><td>validation showed 2000 trials on a 2-dB grid cannot support "the DLL is 1.2 dB worse"</td></tr>
+<tr><td>Oct 7</td><td>Pull-in range corrected 0.75 → 1.8 chips; failure classes made to partition the total</td><td>measured S-curve; overlapping categories were wrong</td></tr>
+<tr><td>Oct 7</td><td>"DLL ≈ CRLB is a bound" withdrawn</td><td>the match holds by design of $K$; the 64-chip CRLB does not bound a 640-chip estimator</td></tr>
+<tr><td>Oct 7</td><td>ZZB for the DLL's own data added</td><td>only valid bound for the DLL</td></tr>
+<tr><td>Oct 7</td><td>DLL windows follow its own timing</td><td>fixed windows distorted low-SNR behaviour</td></tr>
+<tr><td>Oct 9</td><td>Pulse tapered over its last chip</td><td>hard cut made the ZZB miss the CRLB limit by ~1 %</td></tr>
+<tr><td>Oct 9–12</td><td>"MLE biased (bias² curve)" replaced by conditional bias; "gap mostly MLE sub-optimality" corrected</td><td>averaged bias cancels by symmetry; MMSE only ≈ 0.85 dB better</td></tr>
+<tr><td>Nov 5</td><td>"DLL not different from MLE" refined</td><td>true for MSE, false for gross errors (notebook 06)</td></tr>
+<tr><td>Nov 5</td><td>Novelty claim narrowed</td><td>batch ZZB for GNSS code tracking already exists (Survey 04)</td></tr>
+</table>
+
+<h2>12 What the four surveys taught us</h2>
+<table>
+<tr><th>Survey</th><th>Method</th><th>Lesson</th></tr>
+<tr><td>01 Independent validation (Oct 7)</td><td>literature check, from-scratch re-implementation, adversarial audit</td><td>core theory and code correct; several <i>claims</i> wrong → fixes and error bars</td></tr>
+<tr><td>02 Literature survey (Oct 13)</td><td>annotated bibliography, gap searches</td><td>everything up to the batch threshold is a reproduction; candidate gap: a bound for DLL loss of lock</td></tr>
+<tr><td>03 Deep-research novelty check (Oct 13)</td><td>multi-agent search, 25 claims × 3 verifiers</td><td>optimal-MTLL theory exists for <i>phase</i> tracking → claim must be about code delay and the bound↔MTLL link</td></tr>
+<tr><td>04 Interdisciplinary &amp; second novelty check (Nov 5)</td><td>targeted searches</td><td>batch ZZB for GNSS code tracking already exists (Emmanuele 2012, Liu 2016); natural bridge = state estimation + integrity; robotics/VLM links would be forced</td></tr>
+</table>
+<div class="box"><span class="label">Cumulative position</span>
+<p><b>Reproduction:</b> MLE, CRLB, ZZB for delay, MLE threshold prediction (Mallat et al. 2014), batch ZZB for GNSS code
+tracking, linear DLL theory, DLL MTLL. <b>Our own observations:</b> ZZB looseness measured against the MMSE (2.6 dB + 0.85 dB),
+its pilot dependence, the DLL failure decomposition, the criterion-dependent DLL-vs-MLE comparison, the prior-width trend
+of the gap. <b>Appears open (medium-low confidence):</b> bounds with tracking dynamics linked to loss of lock for PN code
+delay. <b>Rule:</b> always "we found no prior work that…", never "first".</p></div>
+
+<h2>13 Limitations</h2>
+<ul>
+<li>Synthetic data only (needed for ground truth and bound comparison).</li>
+<li>Constant delay (no Doppler, so a first-order loop suffices); coherent tracking with known amplitude and phase.</li>
+<li>Known pilot (no unknown data bits); no multipath.</li>
+<li>One DLL design (d = 0.5, 4-chip updates, one loop gain).</li>
+<li>The batch ZZB is not a bound for the DLL; the 640-chip ZZB is valid but loose.</li>
+<li>The pilot-to-pilot spread and the prior-width trend of the gap are measured but not explained theoretically.</li>
+<li>Novelty of the proposed extension is uncertain (absence-of-evidence argument).</li>
+</ul>
+</section>
+
+<section class="part">
+<p class="part-title">Part IV — The remaining 30%</p>
+<h2>14 Proposal: where does a delay <i>tracker</i> lose information?</h2>
+<p class="small"><span class="tag prop">PROPOSED</span> — nothing in this section is implemented. Full text: <code>docs/evaluation/research_proposal.md</code>.</p>
+
+<h3>14.1 Directions considered</h3>
+<table>
+<tr><th>Direction</th><th>Novelty</th><th>Feasible now</th><th>Verdict</th></tr>
+<tr><td><b>D1</b> Dynamic decomposition of the tracking threshold (bound / estimator / loop)</td><td>medium</td><td>yes (core)</td><td><b>recommended</b></td></tr>
+<tr><td><b>D2</b> Loss-of-lock risk prediction (safety-critical autonomy)</td><td>medium</td><td>yes (reuses D1)</td><td>part of D1 (H4)</td></tr>
+<tr><td>D3 Adaptive loop bandwidth via control/RL</td><td>low (LBCA, fuzzy, adaptive KF, RL proof of concept exist)</td><td>partly</td><td>not pursued</td></tr>
+<tr><td>D4 Pilot/code selection by threshold</td><td>low–medium (ZZB waveform design exists)</td><td>yes (≈1 week)</td><td>small side project</td></tr>
+<tr><td>D5 Robot localisation with UWB</td><td>low; physics mismatch (NLOS ≠ thermal threshold)</td><td>risky</td><td>forced — not pursued</td></tr>
+</table>
+
+<h3>14.2 Research question and intuition</h3>
+<p>Our static study split the gap to the bound into <i>bound looseness</i> (ZZB → MMSE, 2.6 dB) and <i>estimator
+sub-optimality</i> (MMSE → MLE, 0.85 dB). The project is about <i>tracking</i>, where two new things happen:
+<b>memory</b> (the prior at each step is the previous posterior, which narrows the search window and should lower the
+threshold) and <b>feedback</b> (the DLL commits to one estimate and can be pushed outside its pull-in range — loss of
+lock). <b>Question:</b> for a moving delay, how much of a DLL's low-SNR failure is fundamental, how much is
+sub-optimal estimation, and how much is loss of lock — and can loss of lock be predicted quantitatively?</p>
+
+<h3>14.3 Model</h3>
+$$ d_k=d_{k-1}+w_k,\quad w_k\sim\mathcal N(0,q);\qquad r_k[n]=s_k(t_n-d_k)+v_k[n],\quad v_k[n]\sim\mathcal N(0,\sigma^2), $$
+<p>one update $k$ per block of $M$ chips. Likelihood (Section 4.1): $\ln p(\mathbf r_k\mid d)=J_k(d)/\sigma^2+\text{const}$.</p>
+
+<h3>14.4 The optimal tracker — an exact grid Bayes filter</h3>
+$$ p(d_k\mid\mathbf r_{1:k})\ \propto\ \underbrace{e^{J_k(d_k)/\sigma^2}}_{\text{update}}\ \underbrace{\int\mathcal N(d_k;d_{k-1},q)\,p(d_{k-1}\mid\mathbf r_{1:k-1})\,dd_{k-1}}_{\text{prediction = Gaussian convolution}}. $$
+<p>Because the state is one-dimensional, the recursion can be computed essentially exactly on a fine grid (point-mass filter,
+Bucy &amp; Senne 1971) — so the "optimal" baseline carries no Monte Carlo approximation error. Its posterior mean is the
+MMSE tracker.</p>
+
+<h3>14.5 The posterior CRB for this model — derivation</h3>
+<p>Tichavský, Muravchik &amp; Nehorai (1998) give $J_{k}=D_{22}-D_{21}(J_{k-1}+D_{11})^{-1}D_{12}$ with
+$D_{11}=\mathbb E[-\partial^2_{d_{k-1}}\ln p(d_k\mid d_{k-1})]=1/q$, $D_{12}=D_{21}=-1/q$, $D_{22}=1/q+J_D$, where
+$J_D=\sum_ns_k'(t_n)^2/\sigma^2$ is the measurement information (Section 5.1). Substituting:</p>
+$$ J_k=\frac1q+J_D-\frac{1/q^2}{J_{k-1}+1/q}=J_D+\frac{J_{k-1}}{q\,J_{k-1}+1}=J_D+\frac{1}{q+1/J_{k-1}}. $$
+<p>With $R=1/J_D$ and $P=1/J$, the fixed point satisfies $P^2+qP-qR=0$, so</p>
+$$ P_\infty=\tfrac12\Big(-q+\sqrt{q^2+4qR}\Big),\qquad K_\infty=\frac{P_\infty+q}{P_\infty+q+R}, $$
+<p>exactly the steady-state scalar Kalman filter. <b>Link to our DLL:</b> $\theta_{k+1}=\theta_k-KD_k$ with $D_k\approx\varepsilon_k+n_k$ is a
+fixed-gain Kalman filter in the linear regime; choosing $K=K_\infty$ makes it optimal there. This replaces our Sprint-2 gain
+choice ("match 64 chips") with a principled one.</p>
+<div class="box proof"><span class="label">Check of the fixed point</span>
+<p>Kalman: prediction $P^-=P+q$, update $P=P^-R/(P^-+R)$. At steady state $P(P+q+R)=(P+q)R\Rightarrow P^2+qP-qR=0$. ∎</p></div>
+
+<h3>14.6 Loss of lock as a Markov chain — our own computation</h3>
+<p>Using the measured S-curve $D(\varepsilon)$ (Section 8.1) and discriminator noise of variance $\sigma_D^2$, the error evolves as</p>
+$$ \varepsilon_{k+1}=\varepsilon_k-K\,D(\varepsilon_k)-K\,n_k+w_{k+1}, $$
+<p>a one-dimensional Markov chain. Discretise $\varepsilon$ on a grid inside the lock region $|\varepsilon|\lt R_{\rm pull}\approx1.8$ chips. The
+mean exit time $m(\varepsilon)$ satisfies the first-step equations</p>
+$$ m(\varepsilon)=1+\sum_{\varepsilon'}P(\varepsilon\to\varepsilon')\,m(\varepsilon'),\qquad m=0\ \text{outside the lock region}, $$
+<p>i.e. one linear solve $(I-P_{\rm in})\mathbf m=\mathbf 1$; the mean time to lose lock is $m(0)$. Published MTLL results are mostly
+continuous-time, second-order loops at small-noise asymptotics; this discrete first-order version uses our measured S-curve
+directly and can be checked against simulation.</p>
+
+<h3>14.7 Risk score (applied part)</h3>
+<p>From the optimal tracker's posterior, the probability that the DLL is already outside its pull-in range:
+$\rho_k=P\big(|d_k-\hat\theta^{\rm DLL}_k|\gt R_{\rm pull}\mid\mathbf r_{1:k}\big)$. Compared with a classical correlator-power lock
+detector by ROC curve and detection lead time — relevant to integrity monitoring in autonomous navigation.</p>
+
+<h3>14.8 Hypotheses — each can fail</h3>
+<table>
+<tr><th></th><th>Hypothesis</th><th>Test</th><th>If it fails</th></tr>
+<tr><td>H1</td><td>Above threshold, DLL with $K=K_\infty$ and the grid tracker both attain the PCRB</td><td>RMSE vs $E_c/N_0$</td><td>implementation error or non-linear jitter — diagnose</td></tr>
+<tr><td>H2</td><td>The DLL leaves the PCRB earlier than the grid tracker; conditioning on lock removes most of the excess</td><td>lock-conditioned RMSE</td><td>excess is jitter inflation inside lock — quantify it with the Markov chain</td></tr>
+<tr><td>H3</td><td>Markov-chain MTLL matches simulation; the DLL threshold is where MTLL ≈ observation horizon</td><td>MTLL vs $E_c/N_0$, $K$</td><td>refine the discrete approximation</td></tr>
+<tr><td>H4</td><td>The posterior risk score predicts loss of lock earlier than a classical detector</td><td>ROC/AUC, lead time</td><td>report where each detector wins</td></tr>
+</table>
+
+<h3>14.9 Experiments, baselines, metrics</h3>
+<ul>
+<li><b>E1</b> RMSE vs $E_c/N_0$: PCRB, grid tracker, linearised Kalman, DLL($K_\infty$) at 2–3 values of $q$, bootstrap CIs.</li>
+<li><b>E2</b> DLL RMSE conditioned on staying in lock.</li>
+<li><b>E3</b> MTLL: Markov chain vs simulation over $E_c/N_0$ and $K$.</li>
+<li><b>E4</b> Loss-of-lock prediction: risk score vs correlator-power detector.</li>
+<li><b>Ablations:</b> early–late spacing $d$; five pilots.</li>
+<li><b>Stretch:</b> a sequential ZZB (Bell et al. construction on the one-step predictive prior) or the marginal WWB (Fritsche et al. 2015) — the most novel and most uncertain part.</li>
+</ul>
+
+<h3>14.10 Roadmap (≈ 3 weeks; adjust to the real calendar)</h3>
+<table>
+<tr><th>Week</th><th>Work</th><th>Deliverable</th><th>Priority</th></tr>
+<tr><td>1</td><td>random-walk model, PCRB recursion, grid tracker, DLL($K_\infty$), E1; tests</td><td>notebook 08</td><td>P0</td></tr>
+<tr><td>2</td><td>E2, Markov-chain MTLL (E3)</td><td>notebook 09</td><td>P0</td></tr>
+<tr><td>2</td><td>risk score (E4), ablations</td><td>figures, table</td><td>P1</td></tr>
+<tr><td>3</td><td>stretch bound; report and final presentation</td><td>report, slides</td><td>P0 / P2</td></tr>
+</table>
+
+<h3>14.11 How it differs from existing work</h3>
+<table>
+<tr><th>Existing</th><th>What it does</th><th>What D1 adds</th></tr>
+<tr><td>Emmanuele et al. 2012; Liu et al. 2016</td><td>ZZB for one integration period of GNSS signals</td><td>tracking dynamics; decomposition bound / estimator / loop</td></tr>
+<tr><td>Holmes &amp; Biederman 1978; Hasson &amp; Bobrovsky 1995; Groh et al. 2012</td><td>MTLL of given loops</td><td>link MTLL to the MSE threshold and to the optimal tracker</td></tr>
+<tr><td>Tichavský 1998; Rapoport &amp; Oshman 2007; Fritsche 2015</td><td>generic recursive bounds</td><td>applied to PN code tracking, against an exact optimal tracker</td></tr>
+<tr><td>Fischler &amp; Schuss 2007</td><td>optimal-MTLL filtering for phase</td><td>code delay (non-periodic, code-dependent side-lobes)</td></tr>
+</table>
+</section>
+
+<section class="part">
+<p class="part-title">Part V — Rehearsal</p>
+<h2>15 Question bank with follow-ups</h2>
+<p class="small">Cover the answer, say it aloud, check. <b>F:</b> = likely follow-up.</p>
+
+<h3>A. Concepts</h3>
+<p class="q">A1. What is your project in one sentence?</p>
+<p class="a">We estimate the delay of a known BPSK signal with a batch MLE and a DLL and compare them with the CRLB and the ZZB, to understand the low-SNR threshold where errors suddenly become large.</p>
+<p class="q">A2. What exactly is the threshold effect?</p>
+<p class="a">A change in the type of error: above threshold the estimate sits on the true correlation peak; below it, noise sometimes makes a wrong peak win and the estimate jumps chips away (Figure 1, Section 6).</p>
+<p class="f">F: Is it a sharp transition? — No, a region a few dB wide; hence fixed criteria and confidence intervals.</p>
+<p class="q">A3. Why plot MSE rather than variance?</p>
+<p class="a">Below threshold the estimators are biased for a given delay, and the ZZB bounds MSE. MSE = variance + bias² (Section 2.1).</p>
+<p class="q">A4. Why is the CRLB not valid at low SNR?</p>
+<p class="a">It assumes unbiasedness, it is local (curvature of the true peak only), and it ignores the prior — below −8 dB it exceeds the prior variance.</p>
+<p class="f">F: So is the CRLB wrong? — No; it is a correct bound for a class our estimators leave at low SNR. It is not informative there.</p>
+<p class="q">A5. Can an estimator beat the CRLB?</p>
+<p class="a">Yes: a biased one; a constrained one near the window edge (MSE/CRLB = 0.63 there); one using more data than the CRLB assumes (a narrow-band DLL uses 640 chips).</p>
+<p class="q">A6. Why does the ZZB need a prior? Is a uniform prior realistic?</p>
+<p class="a">It bounds the MSE averaged over the prior — that is why it stays finite at zero SNR ($T_a^2/12$). Uniform models "the delay is somewhere in this window" after coarse acquisition.</p>
+<p class="f">F: How does the result depend on $T_a$? — $T_a$ = 1: threshold masked; 4 → 16: threshold rises ≈ 3.7 dB and the ZZB gap shrinks 3.4 → 1.5 dB (Section 10.7).</p>
+
+<h3>B. Model and implementation</h3>
+<p class="q">B1. Why a raised-cosine pulse?</p>
+<p class="a">CRLB = $1/(2(E/N_0)\beta^2)$; rectangular chips have $\beta^2=\infty$ ⇒ CRLB = 0. Real receivers band-limit.</p>
+<p class="q">B2. Why 4 samples per chip?</p>
+<p class="a">The spectrum ends at 0.75 cycles/chip &lt; Nyquist (2); samples hold all information and sums equal integrals.</p>
+<p class="q">B3. Why did you taper the pulse?</p>
+<p class="a">A hard cut left a small slope jump; samples on it broke the identity $\rho''(0)=-\beta^2$, so the ZZB missed the CRLB limit by ~1 %. The taper only touches 5 &lt; |t| ≤ 6, where integer points are zeros anyway.</p>
+<p class="q">B4. Why does the MLE need no SNR but the MMSE does?</p>
+<p class="a">$\sigma^2$ scales the whole log-likelihood (arg-max unchanged); the posterior mean weights by $e^{J/\sigma^2}$, which depends on it.</p>
+<p class="q">B5. Why did the model change after the first Sprint-1 script?</p>
+<p class="a">ZZB needs a random delay with a prior; exact analytic delay; analytic spectrum. Same qualitative result.</p>
+
+<h3>C. Derivations (expect the board)</h3>
+<p class="q">C1. Derive the MLE.</p>
+<p class="a">Gaussian likelihood → expand the square → drop $\sum r^2$ → maximise $J(\theta)$ (Section 4.1).</p>
+<p class="q">C2. Derive the CRLB, including the inequality itself.</p>
+<p class="a">Score → $\mathbb E[(\hat\theta-\theta)S]=1$ → Cauchy–Schwarz (Section 2.4); then $I=\frac1{\sigma^2}\sum s'^2$ (Section 5.1).</p>
+<p class="f">F: Why is $\beta^2$ the Gabor bandwidth? — Parseval: differentiation multiplies the spectrum by $j2\pi f$.</p>
+<p class="q">C3. Prove $\mathbb E[X^2]=\int_0^\infty2xP(X\ge x)dx$.</p>
+<p class="a">$X^2=\int_0^\infty2x\mathbf 1\{X\ge x\}dx$; take expectations, swap by Tonelli (Section 2.6).</p>
+<p class="q">C4. Why is any estimator's tail probability bounded by $P_{\min}$?</p>
+<p class="a">Use it as a detector (decide $H_1$ iff $\hat\tau\ge\varphi+h/2$); its errors are exactly the tail events; no detector beats the optimal one (Section 7.2, step 3).</p>
+<p class="q">C5. Why is $P_{\min}=Q(\sqrt{(E/N_0)(1-\rho(h))})$?</p>
+<p class="a">Equal priors, known signals in white noise: $Q(\|\mathbf s_1-\mathbf s_0\|/2\sigma)$ (Section 2.3) and $\|\mathbf s_1-\mathbf s_0\|^2=2\sum s^2(1-\rho)$.</p>
+<p class="q">C6. Show ZZB → CRLB at high SNR.</p>
+<p class="a">$1-\rho\approx\frac12\beta^2h^2$; $\int_0^\infty hQ(ah)dh=1/(4a^2)$ by parts; $a^2=\frac12(E/N_0)\beta^2$ (Section 7.3).</p>
+<p class="f">F: Why $\rho''(0)=-\beta^2$? — summation by parts: $\sum s\,s''=-\sum s'^2$ (Section 2.5).</p>
+<p class="q">C7. Show ZZB → $T_a^2/12$ with no signal.</p>
+<p class="a">$Q(0)=\frac12$; $\int_0^{T_a}\frac h2(1-\frac h{T_a})dh=T_a^2/12$.</p>
+<p class="q">C8. What is valley filling and does it matter?</p>
+<p class="a">Replace the integrand by its non-increasing envelope (valid because the tail probability decreases in $h$). Here &lt; 0.01 %.</p>
+<p class="q">C9. Derive the DLL's noise averaging.</p>
+<p class="a">$\varepsilon_{j+1}=(1-K)\varepsilon_j-Kn_j$ → $h_k=K(1-K)^k$ → $\sum h_k^2=K/(2-K)$ → $N_{\rm eff}=(2-K)/K$ (Section 8.2).</p>
+<p class="q">C10. Why is early minus late proportional to the error?</p>
+<p class="a">$R(\varepsilon-\frac d2)-R(\varepsilon+\frac d2)\approx-2R'(\frac d2)\varepsilon$ (Section 8.1).</p>
+
+<h3>D. DLL vs MLE</h3>
+<p class="q">D1. Why d = 0.5 chip?</p>
+<p class="a">Narrower spacing approximates the derivative better but shrinks the linear region; 0.5 is a standard compromise. Jitter ≈ 1.07 × CRLB.</p>
+<p class="q">D2. Where does K = 2/17 come from?</p>
+<p class="a">$N_{\rm eff}=16$ updates = 64 chips, the batch length: $K=2/(N_{\rm eff}+1)$.</p>
+<p class="f">F: So "DLL ≈ CRLB" is by construction? — Yes, and we say so. A narrower loop goes below the 64-chip CRLB because it uses more data.</p>
+<p class="q">D3. Is the comparison fair?</p>
+<p class="a">In steady state yes; near threshold no — the DLL sees 640 chips. That is why we plot the ZZB for the DLL's own data, the only bound valid for it.</p>
+<p class="q">D4. Isn't the offset calibration $b_j$ cheating?</p>
+<p class="a">It uses only the known pilot; with deliberately wrong timing the results were identical. Without it the DLL is biased (MSE ≈ 2 × CRLB at 30 dB).</p>
+<p class="q">D5. Which is better, DLL or MLE?</p>
+<p class="a">Above threshold equal (by design). Near threshold: same MSE threshold (−0.12 dB, CI [−0.87, 0.59]) but the DLL makes fewer gross errors (0.68 dB more robust) thanks to more data. Far below threshold the DLL is much worse (loss of lock).</p>
+<p class="q">D6. Why a first-order loop?</p>
+<p class="a">Constant delay, no Doppler: no steady-state error. With Doppler a second-order loop is needed.</p>
+
+<h3>E. Experiments</h3>
+<p class="q">E1. How reliable are your numbers?</p>
+<p class="a">Up to 20,000 trials per point, bootstrap 95 % CIs, fixed seeds, tests against analytic facts, independent re-implementation, audit (Section 9).</p>
+<p class="q">E2. The 3 dB threshold definition looks arbitrary.</p>
+<p class="a">Fixed before running; a second, outlier-robust definition is also reported; we state conclusions that hold under both or say when they differ.</p>
+<p class="q">E3. The ZZB is 3.6 dB below your MLE threshold. Is the ZZB wrong?</p>
+<p class="a">Both limits match analytically and numerically, an independent implementation agrees to 0.12 %. The gap = 2.6 dB bound looseness + 0.85 dB MLE sub-optimality; it depends on the pilot (2.7–5.4 dB) and shrinks for a wider prior.</p>
+<p class="f">F: Mallat et al. found their bound much tighter. — Different signal (single pulse vs PN code with side-lobes) and definitions; no contradiction claimed.</p>
+<p class="q">E4. Why does the MLE's MSE exceed the prior variance at very low SNR?</p>
+<p class="a">The arg-max of a noise process piles up at the window edges (~20 % exactly on an edge): 3.09 vs 1.33 chips². The MMSE goes to 1.33.</p>
+<p class="q">E5. Why synthetic data only?</p>
+<p class="a">The bounds need the exact model and ground truth; real data add Doppler, multipath, bits and clock effects — future work.</p>
+
+<h3>F. Novelty (answer honestly)</h3>
+<p class="q">F1. What is your own contribution?</p>
+<p class="a">The theory up to 70% is known. Ours: a carefully verified study for one model, plus observations not found stated for PN pilots — ZZB looseness against the MMSE (2.6 + 0.85 dB), its pilot dependence and prior-width trend, the DLL failure decomposition, the criterion-dependent DLL-vs-MLE result. The research contribution is the proposal.</p>
+<p class="q">F2. Hasn't the ZZB been applied to GNSS code tracking?</p>
+<p class="a">Yes — Emmanuele et al. (ICASSP 2012), Liu et al. (ION ITM 2016), for one integration period. We propose dynamics and loss of lock.</p>
+<p class="q">F3. Isn't loss of lock solved by MTLL theory?</p>
+<p class="a">MTLL gives exit times of a given loop. We found no work linking MTLL to an MSE bound or to the optimal tracker's threshold.</p>
+<p class="q">F4. How sure are you that it is novel?</p>
+<p class="a">Not sure — medium-low. Our first survey missed the Emmanuele papers, which is why we say "we found no prior work that…".</p>
+<p class="q">F5. Why not deep learning or RL?</p>
+<p class="a">Nothing requires it: the optimal tracker is computable exactly (1-D grid). Adaptive-bandwidth RL exists only as a proof of concept.</p>
+
+<h3>G. Future work</h3>
+<p class="q">G1. What if H2 fails?</p>
+<p class="a">Then the DLL's near-threshold loss is partly jitter inflation inside lock — itself measurable with the Markov chain.</p>
+<p class="q">G2. Why a grid filter, not a particle filter?</p>
+<p class="a">One-dimensional state: a fine grid computes the Bayes recursion essentially exactly, no Monte Carlo error.</p>
+<p class="q">G3. Link to robotics / autonomous systems?</p>
+<p class="a">The DLL is a feedback estimator and the optimal tracker is the same Bayes filter used in robot localisation; predicting loss of lock is an integrity problem. Robot UWB data were rejected as forced: their outliers are NLOS, not thermal.</p>
+<p class="q">G4. How would this extend to a real receiver?</p>
+<p class="a">Add Doppler (2-D state, second-order loop), carrier phase, data bits, multipath; the grid filter stays feasible in 2-D.</p>
+
+<h2>A Notation and equation sheet</h2>
+<table>
+<tr><th>Symbol</th><th>Meaning</th></tr>
+<tr><td>$\tau,\hat\tau,e=\hat\tau-\tau$</td><td>true delay, estimate, error (chips)</td></tr>
+<tr><td>$N_c=64$, $f_s=4$</td><td>pilot length (chips), samples per chip</td></tr>
+<tr><td>$\alpha=0.5$</td><td>raised-cosine roll-off</td></tr>
+<tr><td>$\beta^2$</td><td>mean-square (Gabor) bandwidth, 1/chip²</td></tr>
+<tr><td>$E/N_0$, $E_c/N_0$</td><td>batch / per-chip energy-to-noise ratio</td></tr>
+<tr><td>$T_a$</td><td>prior width (chips)</td></tr>
+<tr><td>$\rho(h)$</td><td>normalised autocorrelation</td></tr>
+<tr><td>$d$, $K$, $B_L$, $N_{\rm eff}$</td><td>early–late spacing, loop gain, noise bandwidth, effective averaging length</td></tr>
+</table>
+<table>
+<tr><th>Quantity</th><th>Formula</th></tr>
+<tr><td>SNR</td><td>$E/N_0=\sum s^2/(2\sigma^2)$</td></tr>
+<tr><td>MLE</td><td>$\arg\max_\theta\sum r\,s(t-\theta)-\frac12\sum s(t-\theta)^2$</td></tr>
+<tr><td>CRLB</td><td>$1/(2(E/N_0)\beta^2)$, $\beta^2=\sum s'^2/\sum s^2$</td></tr>
+<tr><td>ZZB</td><td>$\int_0^{T_a}h\,\mathcal V\{(1-\frac h{T_a})Q(\sqrt{(E/N_0)(1-\rho(h))})\}dh$</td></tr>
+<tr><td>ZZB limits</td><td>$T_a^2/12$ (no signal); CRLB (strong signal)</td></tr>
+<tr><td>DLL</td><td>$\theta_{j+1}=\theta_j-K(E-L-b_j)/\bar k$; $N_{\rm eff}=(2-K)/K$; $B_LT=K/(2(2-K))$</td></tr>
+<tr><td>PCRB (proposal)</td><td>$J_k=J_D+1/(q+1/J_{k-1})$; $P_\infty=\frac12(-q+\sqrt{q^2+4qR})$</td></tr>
+</table>
+<h3>Key references</h3>
+<p class="small">Kay, <i>Fundamentals of Statistical Signal Processing I</i> (1993) · Ziv &amp; Zakai, IEEE T-IT 15(3) 1969 · Chazan, Zakai &amp; Ziv, IEEE T-IT 21(1) 1975 ·
+Bell, Steinberg, Ephraim &amp; Van Trees, IEEE T-IT 43(2) 1997 · Mallat et al., arXiv:1405.4645/4647 (2014) · Emmanuele, Luise, Zanier &amp; Crisci, ICASSP 2012 ·
+Liu et al., ION ITM 2016 · Graff &amp; Humphreys, arXiv:2403.12905 (2024) · Betz &amp; Kolodziejski, IEEE T-AES 45(4) 2009 · Stephens &amp; Thomas, IEEE T-AES 31(1) 1995 ·
+Holmes &amp; Biederman, IEEE T-COM 26(11) 1978 · Hasson &amp; Bobrovsky 1995 · Groh, Gentner &amp; Selva, IEEE T-COM 2012 · Tichavský, Muravchik &amp; Nehorai, IEEE T-SP 46(5) 1998 ·
+Rapoport &amp; Oshman, IEEE T-SP 2007 · Fritsche et al., ICASSP 2015 · Fischler &amp; Schuss, arXiv math/0703524 (2007) · Bucy &amp; Senne, Automatica 1971.
+Full annotated lists: <code>docs/surveys/</code>.</p>
+</section>
+</body>
+</html>

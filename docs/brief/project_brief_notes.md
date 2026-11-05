@@ -31,7 +31,7 @@ The project brief specifically asks the team to:
 9. Explain the observed behaviour with theoretical backing.
 10. Explain any performance difference between the DLL and batch MLE.
 
-The official project brief also suggests using a simple **Early-Late discriminator DLL** and generating BPSK signals for different SNRs. It recommends beginning with foundational material on ZZB, DLL, and the application of ZZB to time-delay estimation. [Project Brief, Project 13](/mnt/data/SDET%20Projects.pdf)
+The official project brief also suggests using a simple **Early-Late discriminator DLL** and generating BPSK signals for different SNRs. It recommends beginning with foundational material on ZZB, DLL, and the application of ZZB to time-delay estimation. [Project Brief, Project 13](project_brief_screenshot.png)
 
 ---
 
@@ -551,7 +551,7 @@ Its key relevance here is that it can account for **global ambiguity and thresho
 
 This makes it particularly useful in the low-SNR regime.
 
-The project brief explicitly states that ZZB is expected to provide a tighter bound in low-SNR conditions and to asymptotically approach the CRLB. [Project Brief, Project 13](/mnt/data/SDET%20Projects.pdf)
+The project brief explicitly states that ZZB is expected to provide a tighter bound in low-SNR conditions and to asymptotically approach the CRLB. [Project Brief, Project 13](project_brief_screenshot.png)
 
 Conceptually:
 
@@ -1228,7 +1228,7 @@ The mentor remarks for Project 13 give a clear intended route:
 9. Validate the derived ZZB using the simulation.
 10. Explain any observed performance difference between DLL and batch MLE.
 
-[Project Brief, Project 13](/mnt/data/SDET%20Projects.pdf)
+[Project Brief, Project 13](project_brief_screenshot.png)
 
 ---
 
@@ -1434,4 +1434,4 @@ The role of the ZZB is to investigate whether the theoretical bound remains info
 
 This README is based primarily on the official **SDET Projects** document supplied for the course, specifically **Project 13: "Threshold effects in Time-Delay tracking: CRLB vs ZZB for DLL and batch MLE for BPSK signals"**, including its project description and mentor remarks on page 3.
 
-[Official project brief](/mnt/data/SDET%20Projects.pdf)
+[Official project brief](project_brief_screenshot.png)

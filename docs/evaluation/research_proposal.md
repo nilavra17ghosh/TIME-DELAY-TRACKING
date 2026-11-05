@@ -1,6 +1,6 @@
 # Research directions for the remaining 30% — comparison and proposal
 
-*Prepared 2026-11-05 for the 70% evaluation. Builds on `docs/literature_survey.md` (Oct 13) plus a new check
+*Prepared 2026-11-05 for the 70% evaluation. Builds on `docs/surveys/02_literature_survey_2026-10-13.md` (Oct 13) plus a new check
 (Nov 5) of the interdisciplinary angles. Tags: **[V]** = source opened or listed with matching abstract this or last
 round; **[B]** = standard reference not re-opened.*
 

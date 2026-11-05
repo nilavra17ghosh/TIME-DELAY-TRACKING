@@ -1,7 +1,7 @@
 # Project audit and 70% milestone assessment (2026-11-05)
 
 **Sources used:** the repository (`github.com/nilavra17ghosh/TIME-DELAY-TRACKING`, single commit "Mid-analysis",
-2026-11-04), the archived scripts and validation evidence, `docs/project_brief_notes.md`, the official brief
+2026-11-04), the archived scripts and validation evidence, `docs/brief/project_brief_notes.md`, the official brief
 screenshot, the sprint plan image, and our working sessions from 2026-10-06 to 2026-10-13.
 
 **Missing (not available to this audit — please supply if they exist):** the course **evaluation rubric**, any
@@ -52,22 +52,22 @@ formulate, derive and simulate the ZZB; compare; explain the DLL–MLE differenc
 | ZZB derivation (6 steps + both limits), intuition plots, numerical ZZB, ZZB below MLE within CI | NB04 |
 | Four-curve comparison (+ MMSE, + DLL-valid bound), DLL theory (σ²‖G‖²), DLL failure decomposition, MSE-vs-time | NB05 |
 | Precise thresholds with CIs, 5 pilots, DLL vs MLE significance | **NB06** (added for this evaluation) |
-| Independent validation (literature, re-implementation, audit) | archive/docs_v1/validation_report.md |
-| Literature survey + novelty assessment | docs/literature_survey.md, docs/research_proposal.md §0 |
+| Prior-width study ($T_a$ = 1, 4, 16) with CIs | **NB07** (added for this evaluation) |
+| Independent validation (literature, re-implementation, audit) | docs/surveys/01_independent_validation_2026-10-07.md |
+| Literature survey + novelty assessment | docs/surveys/02_literature_survey_2026-10-13.md, docs/evaluation/research_proposal.md §0 |
 | Fast regression tests | tests/test_core.py (7 tests, ~35 s) |
 
 ### 2.2 Partially completed
 | Component | What is missing |
 |---|---|
 | Explanation of the pilot-to-pilot spread of the ZZB–MLE gap | measured, not yet explained (per-code MIE prediction not done) |
-| Prior-width study ($T_a$ = 1, 4, 16) | only in archived smoke tests (1000 trials, pre-fix code) — **do not present numbers** |
 | "Validation of the ZZB" (brief) | ZZB vs simulation done; a written discussion for the report not yet done |
 | Report / slides (Sprint 7) | not started |
 
 ### 2.3 Planned but not implemented
 * Method-of-interval-errors (MIE) prediction inside the project code (only in archived validation scripts).
 * Any time-varying delay, Doppler, carrier phase, unknown data bits, multipath.
-* The research extension (dynamic decomposition, docs/research_proposal.md) — **entirely proposed**.
+* The research extension (dynamic decomposition, docs/evaluation/research_proposal.md) — **entirely proposed**.
 
 ### 2.4 New, unexplored ideas
 * Sequential/marginal large-error bound for code tracking (stretch goal of the proposal).
@@ -105,7 +105,7 @@ defensible is presenting the research extension as anything but a proposal.
 
 ## 5. Minimum work before the evaluation (status)
 1. ✅ Precise threshold study with confidence intervals — notebook 06.
-2. ✅ Research proposal with literature positioning — docs/research_proposal.md.
-3. ✅ Presentation guide and question bank — docs/presentation_guide.md, docs/question_bank.md.
+2. ✅ Research proposal with literature positioning — docs/evaluation/research_proposal.md.
+3. ✅ Presentation guide and question bank — docs/evaluation/presentation_guide.md, docs/evaluation/question_bank.md.
 4. ⬜ **You:** read NB00 → NB01 → NB03 → NB04 → NB06 and the question bank sections A, C, F (≈ 3–4 hours).
 5. ⬜ Optional, if time: build the slides from the presentation guide.

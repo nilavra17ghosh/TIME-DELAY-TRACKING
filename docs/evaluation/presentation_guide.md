@@ -1,7 +1,9 @@
 # Presentation guide — 70% evaluation
 
+> **The actual deck (19 slides, with speaker notes) is at https://claude.ai/artifact/AJidqc9i1Ftfv5NuEbhbmK** — it follows this guide, splits a few slides in two, and adds slides for the ZZB intuition, DLL vs MLE and the prior-width study (notebook 07). Download it as PowerPoint or PDF from its Share menu. The full explanations are in `study_guide.pdf`.
+
 **Length:** 13 slides, ~15 minutes + questions. **Rule:** every slide says what is *done* vs *proposed*.
-Figures are in `figures/`. Threshold numbers come from notebook 06. Question IDs refer to `docs/question_bank.md`.
+Figures are in `figures/`. Threshold numbers come from notebook 06. Question IDs refer to `docs/evaluation/question_bank.md`.
 
 ---
 
@@ -83,7 +85,7 @@ We plot the bound that actually applies to it."
 **Triggers:** D3, E4.
 
 ## Slide 11 — Results: the threshold, precisely (Sprint 6)
-**Headline:** The threshold, located to ±0.3 dB — and the gap to the bound split in two
+**Headline:** The threshold, located with 95 % confidence intervals (±0.3–0.6 dB) — and the gap to the bound split in two
 **Content:** `s6_threshold_precise.png`; table from NB06 §6.4 (ZZB, MMSE, MLE, DLL with 95 % CIs; the two criteria;
 five pilots).
 **Say:** the NB06 §6.6 interpretation: what is significant, what is not, how much of the gap is the bound vs the
@@ -106,7 +108,7 @@ DLL bound; pilot-to-pilot spread measured but not explained; novelty of the exte
 **Headline:** Where does a delay *tracker* lose information? A dynamic decomposition
 **Content:** state $d_k=d_{k-1}+w_k$; optimal tracker = exact grid Bayes filter; PCRB recursion
 $J_k=J_D+1/(q+1/J_{k-1})$ and $K_\infty$ (DLL = fixed-gain Kalman in the linear regime); Markov-chain MTLL from the
-S-curve; hypotheses H1–H4; 3-week roadmap (docs/research_proposal.md §3–4).
+S-curve; hypotheses H1–H4; 3-week roadmap (docs/evaluation/research_proposal.md §3–4).
 **Say:** "Our static study split the gap into bound looseness and estimator sub-optimality. The proposal does the same
 for tracking, and adds the third ingredient only a loop has — loss of lock — and tests whether its exit-time statistics
 predict the threshold."
